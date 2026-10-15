@@ -8,7 +8,7 @@
 - Date: 2026-10-16 (Asia/Taipei)
 - Baseline: `index.html`
 - Release state: **候選版本，已通過自動化測試；待使用者 iPhone Safari 驗收**。
-- Deployment: 已上傳至 https://github.com/hzw0813/midnight-dungeon 的 `main` 根目錄；GitHub Pages 待啟用並完成網址驗證。
+- Deployment: 已上傳至 https://github.com/hzw0813/midnight-dungeon 的 `main` 根目錄；GitHub Pages 部署工作於 2026-10-16（台北時間）成功完成；預期網址 https://hzw0813.github.io/midnight-dungeon/ 。實機 Safari 仍待使用者驗收。
 
 ## 目標與原則
 1. 僅靠 ChatGPT 聊天室迭代，不使用 Codex / Work。
@@ -50,11 +50,11 @@
 - 戰鬥僅 1 點基礎傷害，敵人種類單一；數值平衡尚未經真人驗收。
 - localStorage 若在聊天內預覽或特殊私密模式不可用，存檔可能無法跨重新載入保存。
 - 在 iPhone 的「檔案」App 裡直接預覽 HTML，JavaScript 可能無法正常執行。以 Safari 開啟託管網址驗收較可靠。
-- 已建立並寫入 GitHub repository；GitHub Pages 尚待啟用及確認可用，不能假設 Safari 網址目前能開啟。
+- 已建立並寫入 GitHub repository；GitHub Pages Actions 首次部署 workflow #38777447592 為 completed/success，尚未完成實體 iPhone Safari 驗收。
 
 ## 下一步（按優先順序）
 1. 收集使用者 iPhone 上對 v0.1.0 的驗收（是否可啟動、是否可操作、是否有 UI 遮擋）。
-2. GitHub repo 已建立且為公開。前往 Settings → Pages，使用 Deploy from a branch、`main`、`/(root)` 啟用網站，然後驗證 Safari 可用。
+2. GitHub Pages 已成功部署；使用者需於 iPhone Safari 開啟固定網址測試觸控、遊戲回合、存檔和 UI，回報錯誤紀錄或截圖。
 3. 下一版建議：操作回饋（攻擊動畫／玩家受傷提示），先不新增大型系統。
 
 ## ChatGPT 新聊天交接指令
