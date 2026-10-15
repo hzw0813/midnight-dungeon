@@ -1,25 +1,27 @@
-# 深夜地牢 v0.1 — Midnight Dungeon
+# 深夜地牢 / Midnight Dungeon — v0.2 Endless
 
-這是一個可以在手機或電腦瀏覽器玩的回合制地牢小遊戲。全部遊戲寫在 `index.html`，沒有任何外部程式庫、廣告、連線要求或帳號需求。
+遊玩：https://hzw0813.github.io/midnight-dungeon/
 
-## 如何玩
-- **手機**：點選方向鍵移動、或在地圖上滑動。走向怪物就會攻擊。
-- **電腦**：方向鍵或 WASD 移動、H 用藥水、空白鍵等待一回合。
-- **目標**：走到發光的圓形傳送門，連續通過三層。
-- **紀錄**：點「紀錄」可複製種子、操作序列、當前地圖與最近事件。若有問題，把紀錄貼回 ChatGPT。
-- **存檔**：支援的網頁瀏覽器會自動將進度儲存到這個網站的 localStorage（不同網址間不共用）。
+一款單檔 HTML5、支援 iPhone Safari 的回合制地牢 Roguelite。無帳號、無廣告、無外部 JS 套件。
 
-## 在 iPhone Safari 上玩
-最穩定的方式是將 `index.html` 放在 GitHub Pages 等 HTTPS 靜態網站上，再用 Safari 開啟網站。只把 HTML 存在 iPhone「檔案」App，無法保證預覽時執行 JavaScript。
+## v0.2：無限成長核心
+- **無盡樓層**：不再於第 3 層通關。怪物 HP、傷害、數量隨樓層上升。
+- **XP/升級**：擊敗怪物獲得經驗值。每升級一次增加最大 HP 2；每兩級提升基本攻擊 1。
+- **樓層三選一**：突破傳送門後，選本輪加成：攻擊 / 生命 / 吸血 / 金幣 / 藥水 / 暴擊。
+- **每五層守衛**：守衛存活時封印出口；突破後共得 5 魂晶（一般樓層得 1）。
+- **鍛造商店**：本輪花金幣增加攻擊（12 金幣起，後續每次 +8），或 8 金幣換 2 瓶藥水。
+- **永久魂晶與天賦**：獲得的魂晶跨死亡保存，退回營地或死亡時，剩餘金幣每 15 枚轉換 1 魂晶。營地用魂晶買永久攻擊、生命、掉金加成，下一輪生效。
+- **存檔遷移**：若沒有 v0.2 存檔會嘗試遷移舊 v0.1 存檔；舊存檔 key 原樣保留。
 
-### 首次用 GitHub Pages 部署
-1. 在 GitHub 建立一個**公開**的空 repo，例如 `midnight-dungeon`。公開後，程式碼與遊戲可被任何人檢視。
-2. 在 repo 根目錄新增或上傳 `index.html`（可連同 PROJECT_STATE.md）。
-3. 到 repo 的 **Settings → Pages → Build and deployment**，設定 **Deploy from a branch**，選擇 `main` 和 `/(root)`，再儲存。
-4. 等待 Pages 建立網站後，用 GitHub 頁面提供的網址在 Safari 打開。往後只要更新 `index.html`，同一個網址就會取得新版本（更新後可能需要重新整理頁面）。
+## iPhone 操作
+使用方向鍵或在地圖上滑動移動；走向怪物即攻擊。點「鍛造商店」使用金幣。到傳送門時點選一種祝福。點「營地」可主動結束這輪並購買永久天賦。點「紀錄」複製 seed/指令等測試資訊回報 Bug。
 
-**發布狀態（2026-10-16）**：v0.1 遊戲程式已上傳到 [hzw0813/midnight-dungeon](https://github.com/hzw0813/midnight-dungeon) 的 `main`。GitHub Pages 仍待在 Settings → Pages 啟用並確認可連線。
+## 儲存 / 注意事項
+使用網站的 localStorage，沒有跨裝置同步。不同網域、清除 Safari 網站資料或無痕模式可能使資料無法保存。無強迫簽到、付費抽卡或限時倒數。所謂無盡是沒有固定結束層數，非宣稱 JavaScript 數字精度可以達到數學上的無限。
 
-## 維護與版本
-每次續作，把**完整最新 ZIP**上傳到新聊天室並輸入「繼續優化」。
-詳細版本狀態與測試結果見 `PROJECT_STATE.md`。
+## 專案檔案
+- `index.html`：完整可玩的 HTML+CSS+JS，無 build。
+- `PROJECT_STATE.md`：長期迭代交接，版本狀態和已知限制。
+- `TEST_REPORT.md`：自動化檢查結果。
+- `test_regression.py`：可用 Python Playwright + Chromium 的核心回歸測試。
+- 本版候選 v0.2.0 在 Chromium 手機模擬中測試通過，尚需實體 iPhone Safari 驗收。
