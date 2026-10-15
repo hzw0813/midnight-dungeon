@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1220">
+  <meta name="color-scheme" content="dark">
+  <title>深夜地牢 | Midnight Dungeon v0.1</title>
+  <style>
+    :root {--bg:#090f1b; --panel:#141f31; --panel2:#1a2940; --border:#293951;--text:#edf5ff;--muted:#9cacc5;--accent:#8fe9c2;--amber:#f5c77b;--red:#ff8d94}
+    *{box-sizing:border-box} html{background:var(--bg)} body{margin:0;min-height:100dvh;color:var(--text);font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at 50% -20%,#253959 0%,transparent 47%),var(--bg);overscroll-behavior-y:contain}
+    button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent} button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+    main{width:min(100%,520px);padding: max(12px,env(safe-area-inset-top)) 14px max(20px,env(safe-area-inset-bottom));margin:0 auto}
+    header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+    .brand{display:flex;align-items:center;gap:10px;min-width:0}.brand-icon{width:41px;height:41px;display:grid;place-items:center;border:1px solid #476159;background:#183730;border-radius:13px;color:#a5f7d3;font-size:25px}
+    h1{font-size:19px;line-height:1.16;margin:0;font-weight:800;letter-spacing:.03em} .subtitle{margin:4px 0 0;color:var(--muted);font-size:11px;font-weight:650;letter-spacing:.14em}
+    .top-actions{display:flex;gap:7px}.mini{background:#1a293d;border:1px solid #38506b;border-radius:11px;padding:10px 12px;font-size:12px;font-weight:700;min-height:40px}
+    .stats{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:8px;margin-bottom:10px}.stat{border:1px solid var(--border);border-radius:12px;background:rgba(22,35,54,.95);padding:8px 11px;min-height:62px;display:flex;flex-direction:column;justify-content:center}.stat-label{font-size:10px;color:#a8b9d1;font-weight:800;letter-spacing:.08em}.stat-value{margin-top:3px;font-size:17px;line-height:1.2;font-weight:850;font-variant-numeric:tabular-nums}.stat:first-child .stat-value{color:#ffa2a7}.stat:nth-child(3) .stat-value{color:#f2ce83}
+    .hpbar{height:4px;margin-top:7px;border-radius:9px;background:#442b3f;overflow:hidden}.hpbar span{height:100%;display:block;background:linear-gradient(90deg,#ff817e,#ffc2a3);width:100%;transition:width .16s ease}
+    .arena{border:1px solid #384968;border-radius:17px;background:#101c2e;position:relative;padding:10px;display:flex;justify-content:center;box-shadow:0 15px 40px #050a125c,inset 0 0 0 1px #1a293e;overflow:hidden}
+    canvas{display:block;width:min(100%,calc(48dvh * 11 / 13),440px);height:auto;aspect-ratio:11/13;border-radius:8px;touch-action:none;background:#0e1828;image-rendering:auto}
+    .board-note{position:absolute;right:15px;top:17px;background:#0a1628a6;border:1px solid #3b4b5e;border-radius:20px;padding:4px 9px;color:#b7d6e0;font-size:10px;pointer-events:none}
+    .notice{min-height:44px;display:flex;align-items:center;gap:10px;background:#172438;border:1px solid var(--border);padding:9px 13px;border-radius:11px;margin:10px 0;color:#cfdeec;font-size:12px;line-height:1.5}
+    .notice i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px #8fe9c272;flex-shrink:0}
+    .controls{display:grid;grid-template-columns: 1.5fr 1fr;gap:15px;align-items:center}
+    .dpad{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:5px;max-width:218px;justify-self:center;width:100%}
+    .control{background:linear-gradient(#293c56,#223249);border:1px solid #50617e;box-shadow:inset 0 1px #ffffff20,0 3px 0 #0b1525;border-radius:13px;min-height:46px;display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:800;touch-action:manipulation;user-select:none;-webkit-user-select:none;transition:transform .06s,background .1s}.control:active,.control.pressed{transform:translateY(2px);box-shadow:inset 0 1px #ffffff20,0 1px 0 #0b1525;background:#31516b}.control[data-dir="up"]{grid-column:2;grid-row:1}.control[data-dir="left"]{grid-column:1;grid-row:2}.control[data-dir="right"]{grid-column:3;grid-row:2}.control[data-dir="down"]{grid-column:2;grid-row:3}.dpad-center{grid-column:2;grid-row:2;display:grid;place-items:center;color:#59728a;font-size:18px}
+    .actions{display:grid;gap:9px}.action{min-height:59px;border:1px solid #4b947e;border-radius:14px;background:linear-gradient(120deg,#224e47,#276352);display:flex;justify-content:center;align-items:center;gap:8px;font-size:13px;font-weight:850;box-shadow:0 3px 0 #0e3029}.action span{font-size:18px}.action:active{transform:translateY(2px);box-shadow:none}.action.secondary{background:linear-gradient(120deg,#364258,#2e3a52);border-color:#516481;box-shadow:0 3px 0 #1a2437}.action small{opacity:.8;font-size:11px}
+    .hint{text-align:center;font-size:11px;line-height:1.5;color:#7f92ad;margin-top:13px}
+    .shade{position:fixed;inset:0;background:rgba(4,9,17,.76);display:none;align-items:center;justify-content:center;padding:20px;z-index:5;backdrop-filter:blur(7px)}.shade.open{display:flex}.modal{width:min(100%,410px);border:1px solid #516a80;border-radius:20px;background:#17263b;box-shadow:0 35px 90px #0009;padding:23px;text-align:center;max-height:85dvh;overflow-y:auto}.modal .eyebrow{font-weight:800;letter-spacing:.14em;color:var(--accent);font-size:11px}.modal h2{font-size:26px;margin:9px 0;color:#f6f6fa}.modal p{color:#bdcde0;line-height:1.7;font-size:14px}.modal .big{font-size:36px;margin-top:3px}.modal .modal-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:15px;justify-content:center}.modal button{padding:12px 15px;border-radius:11px;border:1px solid #5d9787;background:#265548;font-size:13px;font-weight:750}.modal button.secondary{background:#293b52;border-color:#5a6d89}.modal textarea{margin-top:8px;width:100%;height:200px;background:#0c1626;color:#cce6eb;border:1px solid #415a70;border-radius:10px;padding:10px;font:11px/1.5 ui-monospace,monospace;resize:vertical;text-align:left}
+    @media (max-height:750px){header{margin-bottom:7px}.stats{margin-bottom:7px}.stat{min-height:54px;padding:6px 10px}.arena{padding:7px}canvas{width:min(100%,calc(45dvh * 11 / 13),440px)}.notice{min-height:37px;margin:7px 0;padding:6px 10px}.control{min-height:42px}.action{min-height:55px}.hint{margin-top:10px}}
+    @media (prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;animation:none!important}}
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="brand"><div class="brand-icon" aria-hidden="true">✦</div><div><h1>深夜地牢</h1><p class="subtitle">MIDNIGHT DUNGEON · V0.1</p></div></div>
+    <div class="top-actions"><button class="mini" id="debugBtn" type="button">紀錄</button><button class="mini" id="restartBtn" type="button">重開</button></div>
+  </header>
+  <section class="stats" aria-label="遊戲狀態">
+    <div class="stat"><div class="stat-label">生命值 HP</div><div class="stat-value" id="hpText">10 / 10</div><div class="hpbar"><span id="hpBar"></span></div></div>
+    <div class="stat"><div class="stat-label">地牢樓層</div><div class="stat-value" id="floorText">1 / 3</div></div>
+    <div class="stat"><div class="stat-label">金幣</div><div class="stat-value" id="coinText">0</div></div>
+  </section>
+  <div class="arena"><canvas id="board" width="440" height="520" aria-label="地牢遊戲畫面：可滑動移動角色"></canvas><div class="board-note" id="turnBadge">TURN 0</div></div>
+  <div class="notice" aria-live="polite"><i></i><span id="notice">探索地牢。踩上發光傳送門前往下一層。</span></div>
+  <section class="controls" aria-label="觸控遊戲操作">
+    <div class="dpad">
+      <button class="control" data-dir="up" type="button" aria-label="向上">↑</button>
+      <button class="control" data-dir="left" type="button" aria-label="向左">←</button>
+      <div class="dpad-center" aria-hidden="true">✦</div>
+      <button class="control" data-dir="right" type="button" aria-label="向右">→</button>
+      <button class="control" data-dir="down" type="button" aria-label="向下">↓</button>
+    </div>
+    <div class="actions">
+      <button type="button" class="action" id="potionBtn"><span aria-hidden="true">✚</span> 治療 <small id="potionText">× 2</small></button>
+      <button type="button" class="action secondary" id="waitBtn"><span aria-hidden="true">◷</span> 等待一回合</button>
+    </div>
+  </section>
+  <div class="hint">方向鍵移動・撞上怪物即可攻擊・滑動地圖也能操作</div>
+</main>
+<div class="shade" id="overlay" role="presentation"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="eyebrow" id="modalEyebrow">MIDNIGHT DUNGEON</div><div class="big" id="modalIcon">✦</div><h2 id="modalTitle">提示</h2><p id="modalText"></p><textarea id="debugText" readonly hidden spellcheck="false"></textarea><div class="modal-actions" id="modalActions"></div></section></div>
+<script>
+(function(){
+  'use strict';
+  const VERSION='0.1.0', WIDTH=11, HEIGHT=13, MAX_FLOOR=3, SAVE_KEY='midnight-dungeon-v0.1';
+  const DIRECTIONS={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
+  const $=id=>document.getElementById(id);
+  const canvas=$('board'), ctx=canvas.getContext('2d');
+  let game, overlayMode='';
+  const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+  const key=(x,y)=>y*WIDTH+x;
+  const same=(a,b)=>a.x===b.x&&a.y===b.y;
+  const random=(s)=>{s.rng=(Math.imul(s.rng,1664525)+1013904223)>>>0;return s.rng/4294967296;};
+  const randInt=(s,n)=>Math.floor(random(s)*n);
+  const isInside=(x,y)=>x>=0&&y>=0&&x<WIDTH&&y<HEIGHT;
+  const isWalkable=(s,x,y)=>isInside(x,y)&&s.map[y][x]===0;
+  const neighbors=(x,y)=>[[x,y-1],[x+1,y],[x,y+1],[x-1,y]];
+
+  function distances(s,sx,sy){
+    const d=Array.from({length:HEIGHT},()=>Array(WIDTH).fill(-1));
+    const q=[[sx,sy]]; let i=0; d[sy][sx]=0;
+    while(i<q.length){const [x,y]=q[i++];for(const [nx,ny] of neighbors(x,y)){
+      if(isWalkable(s,nx,ny)&&d[ny][nx]<0){d[ny][nx]=d[y][x]+1;q.push([nx,ny]);}
+    }}
+    return d;
+  }
+  function createState(seed){
+    const s={version:VERSION,seed:seed>>>0,rng:seed>>>0,floor:1,turn:0,maxHp:10,hp:10,coins:0,potions:2,kills:0,status:'playing',hero:{x:1,y:1},map:[],exit:null,enemies:[],loot:[],actions:[],events:[],notice:'探索地牢。踩上發光傳送門前往下一層。'};
+    makeFloor(s);return s;
+  }
+  function log(s,text){s.notice=text;s.events.push('T'+s.turn+': '+text);if(s.events.length>40)s.events.shift();}
+  function makeFloor(s){
+    s.hero={x:1,y:1};s.map=Array.from({length:HEIGHT},(_,y)=>Array.from({length:WIDTH},(_,x)=>x===0||y===0||x===WIDTH-1||y===HEIGHT-1?1:0));
+    for(let y=1;y<HEIGHT-1;y++)for(let x=1;x<WIDTH-1;x++){
+      if((x<=2&&y<=2)|| (x===1&&y<=4)|| (y===1&&x<=4))continue;
+      if(random(s)<0.155)s.map[y][x]=1;
+    }
+    // Remove disconnected pockets. The start and exit will always be connected.
+    let dist=distances(s,1,1);
+    for(let y=1;y<HEIGHT-1;y++)for(let x=1;x<WIDTH-1;x++)if(dist[y][x]<0)s.map[y][x]=1;
+    dist=distances(s,1,1);
+    let cells=[];
+    for(let y=1;y<HEIGHT-1;y++)for(let x=1;x<WIDTH-1;x++)if(dist[y][x]>=0)cells.push({x,y,d:dist[y][x]});
+    cells.sort((a,b)=>b.d-a.d||b.y-a.y||b.x-a.x);
+    s.exit={x:cells[0].x,y:cells[0].y};s.enemies=[];s.loot=[];
+    let used=new Set([key(1,1),key(s.exit.x,s.exit.y)]);
+    function drawCell(minDist){
+      const options=cells.filter(c=>c.d>=minDist&&!used.has(key(c.x,c.y)));
+      if(options.length===0)return null;
+      const c=options[randInt(s,options.length)];used.add(key(c.x,c.y));return {x:c.x,y:c.y};
+    }
+    for(let i=0;i<1+s.floor;i++){const p=drawCell(5);if(p)s.enemies.push({...p,hp:s.floor===1?2:3,maxHp:s.floor===1?2:3,id:'E'+s.floor+'-'+i});}
+    for(let i=0;i<3;i++){const p=drawCell(2);if(p)s.loot.push({...p,type:i===0?'potion':'coin',amount:i===0?1:(2+randInt(s,4))});}
+  }
+  function enemyAt(s,x,y){return s.enemies.find(e=>e.x===x&&e.y===y);}
+  function collect(s){
+    const i=s.loot.findIndex(l=>same(l,s.hero)); if(i<0)return '';
+    const l=s.loot.splice(i,1)[0];if(l.type==='potion'){s.potions++;return '撿到一瓶治療藥水！';}
+    s.coins+=l.amount;return '撿到 '+l.amount+' 枚金幣！';
+  }
+  function enemyTurn(s){
+    const d=distances(s,s.hero.x,s.hero.y);
+    let hits=0;
+    for(const e of s.enemies){
+      if(s.status!=='playing')break;
+      const steps=d[e.y][e.x];if(steps<0||steps>7)continue;
+      if(steps===1){s.hp-=1;hits++;if(s.hp<=0){s.hp=0;s.status='lost';break;}continue;}
+      const candidates=neighbors(e.x,e.y).filter(([x,y])=>isWalkable(s,x,y)&&d[y][x]>=0&&d[y][x]<steps&&!(x===s.hero.x&&y===s.hero.y)&&!s.enemies.some(other=>other!==e&&other.x===x&&other.y===y));
+      if(candidates.length){candidates.sort((a,b)=>d[a[1]][a[0]]-d[b[1]][b[0]]);e.x=candidates[0][0];e.y=candidates[0][1];}
+    }
+    return hits;
+  }
+  function applyAction(s,action){
+    if(s.status!=='playing')return false;
+    let msg='';
+    if(action==='potion'){
+      if(s.potions===0){log(s,'治療藥水用完了。');return false;}
+      if(s.hp===s.maxHp){log(s,'生命值已滿，先保留藥水。');return false;}
+      s.potions--;const healed=Math.min(4,s.maxHp-s.hp);s.hp+=healed;msg='使用藥水，回復 '+healed+' HP。';
+    } else if(action==='wait'){msg='等待了一回合。';}
+    else if(DIRECTIONS[action]){
+      const [dx,dy]=DIRECTIONS[action], nx=s.hero.x+dx,ny=s.hero.y+dy;
+      if(!isWalkable(s,nx,ny)){log(s,'前面是牆壁。');return false;}
+      const enemy=enemyAt(s,nx,ny);
+      if(enemy){enemy.hp--;msg='攻擊怪物，造成 1 點傷害。';if(enemy.hp<=0){s.enemies=s.enemies.filter(e=>e!==enemy);s.kills++;s.coins++;msg='擊敗怪物！獲得 1 枚金幣。';}}
+      else{s.hero={x:nx,y:ny};msg=collect(s)||'繼續探索。';}
+    } else{return false;}
+    s.turn++;s.actions.push(action);
+    if(s.actions.length>2000)s.actions.shift();
+    if(same(s.hero,s.exit)){
+      if(s.floor===MAX_FLOOR){s.status='won';log(s,'完成三層地牢！你成功逃出了。');return true;}
+      s.floor++;s.hp=clamp(s.hp+2,0,s.maxHp);makeFloor(s);log(s,'進入第 '+s.floor+' 層，回復 2 HP。');return true;
+    }
+    const hits=enemyTurn(s);
+    if(s.status==='lost')msg='你的生命值歸零。冒險結束。';
+    else if(hits)msg+=' 受到 '+hits+' 點傷害！';
+    log(s,msg);return true;
+  }
+  function validateSave(s){
+    return !!(s&&s.version===VERSION&&Number.isInteger(s.seed)&&s.seed>=0&&Number.isInteger(s.rng)&&s.rng>=0&&Number.isInteger(s.floor)&&s.floor>=1&&s.floor<=MAX_FLOOR&&Number.isInteger(s.turn)&&s.turn>=0&&Number.isInteger(s.hp)&&s.hp>=0&&s.hp<=10&&Number.isInteger(s.coins)&&s.coins>=0&&Number.isInteger(s.potions)&&s.potions>=0&&s.hero&&Number.isInteger(s.hero.x)&&Number.isInteger(s.hero.y)&&Array.isArray(s.map)&&s.map.length===HEIGHT&&s.map.every(row=>Array.isArray(row)&&row.length===WIDTH&&row.every(c=>c===0||c===1))&&isWalkable(s,s.hero.x,s.hero.y)&&s.exit&&isWalkable(s,s.exit.x,s.exit.y)&&Array.isArray(s.enemies)&&Array.isArray(s.loot)&&Array.isArray(s.actions)&&Array.isArray(s.events)&&['playing','won','lost'].includes(s.status));
+  }
+  function store(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(game));}catch(_){ /* private mode may disallow storage */ }}
+  function restore(){try{const raw=localStorage.getItem(SAVE_KEY);if(raw){const parsed=JSON.parse(raw);if(validateSave(parsed))return parsed;}}catch(_){ /* ignore invalid or blocked storage */ }return null;}
+  function writeText(el,text){el.textContent=text;}
+  function circle(x,y,r,color){ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();}
+  function roundRect(x,y,w,h,r,color){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=color;ctx.fill();}
+  function renderBoard(s){
+    const T=40;ctx.clearRect(0,0,440,520);
+    ctx.fillStyle='#0f192a';ctx.fillRect(0,0,440,520);
+    for(let y=0;y<HEIGHT;y++)for(let x=0;x<WIDTH;x++){
+      let px=x*T,py=y*T;
+      if(s.map[y][x]){
+        ctx.fillStyle=(x+y)%3===0?'#27394b':'#2b4052';ctx.fillRect(px+1,py+1,38,38);
+        ctx.fillStyle='#354e61';ctx.fillRect(px+2,py+2,36,4);
+        ctx.fillStyle='#17283a';ctx.fillRect(px+2,py+34,36,4);
+        ctx.fillStyle='#1e3040';ctx.fillRect(px+19,py+5,2,28);
+      } else {
+        ctx.fillStyle=(x+y)%2===0?'#142437':'#16283d';ctx.fillRect(px,py,40,40);
+        ctx.strokeStyle='#233c51';ctx.lineWidth=.65;ctx.strokeRect(px+.5,py+.5,39,39);
+        circle(px+9,py+12,1.1,'#274257');circle(px+30,py+28,.8,'#244156');
+      }
+    }
+    const ex=s.exit.x*T+20,ey=s.exit.y*T+20;
+    circle(ex,ey,16,'#174945');circle(ex,ey,12,'#378b81');circle(ex,ey,8,'#0f292f');circle(ex,ey,4,'#a5f2d5');
+    ctx.strokeStyle='#a9f6df';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(ex,ey,14,.3,4.2);ctx.stroke();
+    for(const l of s.loot){const x=l.x*T+20,y=l.y*T+20;
+      if(l.type==='potion'){
+        roundRect(x-7,y-4,14,15,3,'#ea739b');roundRect(x-4,y-9,8,6,1,'#c3dee4');roundRect(x-4,y,8,6,2,'#ffb1ca');
+      }else{
+        circle(x,y,10,'#bd833a');circle(x,y,7,'#e9c676');circle(x-2,y-2,2,'#fff0bb');
+      }
+    }
+    for(const e of s.enemies){const x=e.x*T+20,y=e.y*T+20;
+      ctx.fillStyle='#8d61a2';ctx.beginPath();ctx.ellipse(x,y+3,14,12,0,0,Math.PI*2);ctx.fill();
+      circle(x-5,y,3.5,'#f9f6fb');circle(x+5,y,3.5,'#f9f6fb');circle(x-4,y+1,1.5,'#29253e');circle(x+6,y+1,1.5,'#29253e');
+      ctx.fillStyle='#4d314f';ctx.fillRect(x-9,y-17,18,3);ctx.fillStyle='#ffa1ba';ctx.fillRect(x-9,y-17,Math.round(18*e.hp/e.maxHp),3);
+    }
+    const hx=s.hero.x*T+20,hy=s.hero.y*T+20;
+    circle(hx,hy+3,16,'#1c5a58');circle(hx,hy,12,'#71d8c5');
+    ctx.fillStyle='#b4ffe1';ctx.beginPath();ctx.moveTo(hx,hy-16);ctx.lineTo(hx+10,hy-3);ctx.lineTo(hx-10,hy-3);ctx.closePath();ctx.fill();
+    circle(hx-4,hy+3,2,'#113c43');circle(hx+4,hy+3,2,'#113c43');
+    circle(hx-4,hy-7,3,'#e7fff9');
+  }
+  function render(){
+    writeText($('hpText'),game.hp+' / '+game.maxHp);$('hpBar').style.width=(100*game.hp/game.maxHp)+'%';
+    writeText($('floorText'),game.floor+' / '+MAX_FLOOR);writeText($('coinText'),String(game.coins));
+    writeText($('potionText'),'× '+game.potions);writeText($('notice'),game.notice);writeText($('turnBadge'),'TURN '+game.turn);
+    $('potionBtn').disabled=game.status!=='playing';$('waitBtn').disabled=game.status!=='playing';
+    renderBoard(game);
+  }
+  function openModal(opts){
+    overlayMode=opts.mode||'notice';writeText($('modalEyebrow'),opts.eyebrow||'MIDNIGHT DUNGEON');writeText($('modalIcon'),opts.icon||'✦');writeText($('modalTitle'),opts.title);writeText($('modalText'),opts.text||'');
+    $('debugText').hidden=!opts.debug; if(opts.debug)$('debugText').value=makeReport();
+    const actions=$('modalActions');actions.replaceChildren();for(const button of opts.buttons){const el=document.createElement('button');el.type='button';el.textContent=button.label;if(button.secondary)el.classList.add('secondary');el.addEventListener('click',button.action);actions.appendChild(el);}
+    $('overlay').classList.add('open');
+  }
+  function closeModal(){$('overlay').classList.remove('open');overlayMode='';}
+  function makeReport(){
+    const report={game:'Midnight Dungeon',version:VERSION,seed:game.seed,floor:game.floor,turn:game.turn,status:game.status,hp:game.hp,coins:game.coins,kills:game.kills,actions:game.actions,events:game.events,map:game.map.map(row=>row.map(n=>n?'#':'.').join(''))};
+    return JSON.stringify(report,null,2);
+  }
+  function openDebug(){openModal({mode:'debug',icon:'⌘',title:'測試紀錄',text:'此紀錄含亂數種子、操作序列與遊戲狀態，可用來重現問題。',debug:true,buttons:[{label:'複製紀錄',action:async()=>{const txt=makeReport();try{await navigator.clipboard.writeText(txt);writeText($('modalText'),'已複製測試紀錄，可以貼回 ChatGPT。');}catch(_){$('debugText').focus();$('debugText').select();writeText($('modalText'),'請長按下面的紀錄並選擇「拷貝」。');}}},{label:'關閉',secondary:true,action:closeModal}]});}
+  function askRestart(){openModal({icon:'↻',title:'重新開始？',text:'會清除目前進度，並以相同地圖種子重新開始，方便重現問題。',buttons:[{label:'相同地圖重開',action:()=>restart(game.seed)},{label:'新地圖',secondary:true,action:()=>restart((Date.now()>>>0)||1)},{label:'取消',secondary:true,action:closeModal}]});}
+  function endIfNeeded(){if(game.status==='won')openModal({eyebrow:'YOU ESCAPED',icon:'✧',title:'地牢攻略成功！',text:'你抵達第 3 層出口，帶著 '+game.coins+' 枚金幣離開。共花費 '+game.turn+' 回合。',buttons:[{label:'再玩一次',action:()=>restart((Date.now()>>>0)||1)},{label:'查看紀錄',secondary:true,action:openDebug}]});
+    else if(game.status==='lost')openModal({eyebrow:'GAME OVER',icon:'☾',title:'冒險結束',text:'你在第 '+game.floor+' 層倒下了。共走了 '+game.turn+' 回合，擊敗 '+game.kills+' 隻怪物。',buttons:[{label:'同種子重試',action:()=>restart(game.seed)},{label:'查看紀錄',secondary:true,action:openDebug}]});}
+  function action(a){if(overlayMode)return;const changed=applyAction(game,a);if(changed)store();render();endIfNeeded();}
+  function restart(seed){game=createState(seed);store();closeModal();render();}
+  for(const el of document.querySelectorAll('[data-dir]'))el.addEventListener('click',()=>action(el.dataset.dir));
+  $('waitBtn').addEventListener('click',()=>action('wait'));$('potionBtn').addEventListener('click',()=>action('potion'));
+  $('debugBtn').addEventListener('click',openDebug);$('restartBtn').addEventListener('click',askRestart);
+  $('overlay').addEventListener('click',e=>{if(e.target===$('overlay')&&overlayMode!=='result')closeModal();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlayMode){closeModal();return;}if(overlayMode)return;const dirs={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right',h:'potion',' ':'wait'};const act=dirs[e.key];if(act){e.preventDefault();action(act);}});
+  let touch=null;
+  canvas.addEventListener('pointerdown',e=>{touch={x:e.clientX,y:e.clientY,pointer:e.pointerId};});
+  canvas.addEventListener('pointerup',e=>{if(!touch||touch.pointer!==e.pointerId)return;const dx=e.clientX-touch.x,dy=e.clientY-touch.y;touch=null;if(Math.max(Math.abs(dx),Math.abs(dy))<22){ // Tap a directly adjacent tile.
+    const rect=canvas.getBoundingClientRect();const x=Math.floor((e.clientX-rect.left)/rect.width*WIDTH),y=Math.floor((e.clientY-rect.top)/rect.height*HEIGHT);
+    const dist=Math.abs(x-game.hero.x)+Math.abs(y-game.hero.y);if(dist===1)action(x>game.hero.x?'right':x<game.hero.x?'left':y>game.hero.y?'down':'up');return;
+  }action(Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up'));});
+  canvas.addEventListener('pointercancel',()=>{touch=null;});
+  // Exposes deterministic game logic for regression testing, not a network API.
+  window.MidnightDungeonTest={createState,applyAction,distances,validateSave,VERSION,WIDTH,HEIGHT};
+  game=restore()||createState((Date.now()>>>0)||1);store();render();endIfNeeded();
+})();
+</script>
+</body>
+</html>
