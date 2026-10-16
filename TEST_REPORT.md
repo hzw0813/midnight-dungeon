@@ -1,17 +1,14 @@
-# v0.2.0 Regression Report
+# v0.3.0 Regression Report — 2026-10-16
 
-Date: 2026-10-16 (Asia/Taipei)
-Test platform: Headless Chromium, 390×844 mobile emulation, Playwright. This is **not** a real iPhone Safari test.
+平台：Headless Chromium / Playwright，手機尺寸 320、375、390、430px，**非實機 Safari**。
 
-## Passed
-- 2,000 seeded games: valid save states, reachable exits and entity placements, deterministic replay.
-- 16 floor transitions / 16 distinct three-choice rewards.
-- Floor 5, 10, 15 bosses must be defeated before portal can be used.
-- XP/level-up, deaths and one-time coin conversion, permanent talent effects across runs, shop costs, v0.1 save migration.
-- Mobile touch directional controls, map swipe, shop, rewards, camp, persisted state simulation.
-- JavaScript page errors: 0.
-- Mobile widths 375, 390, 430 tested for horizontal overflow.
+## 本地測試：通過
+- 2000 隨機地圖 seed：出口可達、物件可達、存檔合法、確定重播，失敗各 0。
+- 30 層連續推進：每層祝福可選，層 1、4、7、10、13、16、19、22、25、28 額外聖物三選一。
+- 守衛樓層傳送門封印；回聲第三次攻擊、雷鏈傷害、吸血/金幣共鳴、荊棘反擊擊殺、火種每層一次重生通過。
+- v0.1/v0.2 內容轉換；舊 v0.2 存檔 key 保留；背包、重載後聖物、debug 紀錄正確。
+- 249 引擎斷言；320～430px 不產生水平 overflow；JavaScript pageerror 0。
 
-## Unverified
-- Real Safari behavior, actual phone localStorage policy, live site loading in iPhone, long-term difficulty and extreme-depth endurance.
-- Full local test script and mobile screenshots are also archived in `midnight_dungeon_v0.2.zip`.
+## 限制
+- 本測試環境無法直接對本機伺服器或 GitHub Pages 導覽，因此測試使用 `page.set_content` 和 mock localStorage；尚未驗證實際網路載入或 Safari 儲存。
+- 高樓層數值溢位、真人遊玩平衡及真實 iPhone 觸控尚未測試。完整測試腳本、截圖與原始專案保存於 `midnight_dungeon_v0.3.zip`。
