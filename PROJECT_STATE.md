@@ -1,29 +1,28 @@
 # 深夜地牢 — PROJECT_STATE
 
-## 基準版本
-- Version: **v0.3.0 / 聖物覺醒**，2026-10-16。Chromium 自動測試通過，**iPhone Safari 尚待真機驗收**。
-- Repository: https://github.com/hzw0813/midnight-dungeon
+## 基準
+- 2026-10-16：v0.4.0（精英狩獵），Chromium 手機模擬回歸通過，待 iPhone Safari 實機驗收。
+- Repo: https://github.com/hzw0813/midnight-dungeon
 - Game: https://hzw0813.github.io/midnight-dungeon/
-- Entry: `main/index.html`（單檔 HTML+CSS+JS）；版控可回退。開發流程純 ChatGPT 聊天室，不用 Codex、Work。
+- 只靠 ChatGPT 聊天室開發，不使用 Codex/Work；以 GitHub main 的單檔 index.html 為主要來源，每版單獨聚焦一項系統，保留 Git 歷史可回退。
 
-## 長期遊戲方向
-核心為無盡爬塔、短期 XP 金幣與升級、中期流派搭配與聖物、長期魂晶永久天賦。每版聚焦一個系統、可測試/可回退，不使用強迫每日簽到、計時付費獎勵或付費抽卡。
+## 現有遊戲
+- 無限樓層，XP/金幣／鍛造、每層祝福三選一、每三層聖物三選一、每五層 Boss、死亡／撤退後魂晶永久天賦。
+- v0.3 六件聖物：echo/greed/blood/storm/thorns/ember。
+- v0.4 精英：每個 floor>=2 且偶數、不逢 5 的樓層有一隻 elite。brute 蓄力後重擊（離開可閃）、guard 第一擊減免最多 2、hunter 遠距離能走兩格。HP/傷害強化，擊殺額外獲得 3 XP。
+- 精英死亡時一定在所在格掉 `loot.type='cache'`，當下由 seeded RNG 固定獎項。gold 52%（8＋2×樓層金幣＋1 藥水）、soul 30%（永久 2 魂晶＋1 藥水）、relic 18%（額外聖物三選一）。玩家移動至寶箱才能領取；relic 寶箱使用 `status='relic'`、`relicSource='elite'`。
+- UI：精英框與屬性提示、寶箱造型、特殊戰鬥訊息。
+- 存檔 key：`midnight-dungeon-v0.4`；優先從 v0.3 migrateV3，然後兼容 v0.2/v0.1，不刪舊存檔。seed+actions 可在相同版本確定重播，新版本舊 action 序列不保證相同。
 
-## v0.3 機制
-- 新增 `relics` 六項非負整數：`echo`（每三攻追擊）、`greed`（金幣＋貪婪連攜回血）、`blood`（回血＋吸血連攜）、`storm`（暴擊雷鏈＋暴擊祝福連攜）、`thorns`（受擊反傷）、`ember`（每層一次瀕死重生）。
-- 物品稀有度 common / rare / legendary（權重 6 / 3 / 1），抽取不重複的三件。通關層數 1,4,7,10... 有聖物選擇；先祝福 `choosing` 後聖物 `relic`。
-- 新狀態 `pendingRelics`、`attackCount`、`emberUsedFloor`，可用 `relic:<id>` 選擇；未完成選擇不能繼續普通操作。
-- 畫面增加 `#relicBtn` 背包、稀有度高亮卡片與特殊觸發提示。重複取得相同聖物可升級。
-- v0.3 存檔 key `midnight-dungeon-v0.3`。`migrateV2` 優先遷移 v0.2，否則嘗試 v0.1；原本 key 不刪除，保留回退可能。
-
-## 自動品質
-- 2000 seeded maps + replay/存檔驗證、30 層（10 次聖物機會）、Boss 出口封印、六聖物實際效果、遷移、手機觸控選擇及本機存檔模擬；完整本地回歸 249 項引擎斷言均通過。
-- 320/375/390/430px 手機模擬無水平 overflow，JS pageerror 0。*非* iPhone Safari 實機，也非線上站點瀏覽器測試。
+## QA 與限制
+- 本地完整回歸 1,114 項引擎斷言，包含 2,000 地圖種子、30 樓層、360 個精英寶箱掉落驗證、三種精英行為、各寶箱效果、存檔遷移；390px 手機 UI/存檔，320/375/390/430 無水平 overflow，無 Chromium JS pageerror。GitHub test_regression.py 為簡短煙霧測試；完整腳本在 ZIP。
+- HTTP localhost 模擬導覽在執行環境因管理限制遭封鎖；真實網站 Safari 實測未完成。高樓層數值上限和真人遊戲平衡亦未驗證。
+- 不提供付費抽卡、倒數逼迫或每日簽到。
 
 ## 下一步
-1. 收集實際 iPhone Safari 的遊玩、觸控、存檔及聖物選擇回饋。若有 Bug 優先修復。
-2. v0.4 建議聚焦「精英怪＋不同掉落」或「傷害浮字／擊殺回饋」，勿一次堆積很多系統。
-3. 之後再做完整存檔匯出/匯入、難度曲線與極深樓層壓力測試。JS 安全整數限制意味無盡並不等於數學上的無限。
+1. 請使用者在 iPhone Safari 驗收到第 2 層：精英提示、可閃重擊、打倒後寶箱、重載存檔。
+2. Bug 先修；若順利，v0.5 只加傷害浮字／擊殺與稀有掉落動效，提高戰鬥即時反饋，不一次重寫全部系統。
+3. 後續擴充匯出存檔、精英平衡、超深層數值壓力檢查。
 
-### 下一次 ChatGPT 聊天提示
-「讀取 hzw0813/midnight-dungeon 最新 main 的 index.html、PROJECT_STATE.md、TEST_REPORT.md 與 test_regression.py；沿用小步測試→更新→部署→手機驗收的流程，勿用 Codex/Work。v0.3 有六種聖物和祝福連攜、舊版存檔遷移；先等 Safari 實機回饋。」
+## 續作提示
+「讀取 GitHub hzw0813/midnight-dungeon 的最新 main 與 PROJECT_STATE.md，先看 v0.4 的 Safari 驗收回饋。照單版單核心功能的流程實作、回歸測試、部署、再驗收。」

@@ -1,14 +1,14 @@
-# v0.3.0 Regression Report — 2026-10-16
+# v0.4.0 Test Report — 2026-10-16
 
-平台：Headless Chromium / Playwright，手機尺寸 320、375、390、430px，**非實機 Safari**。
+## Local automated suite passed
+- Headless Playwright Chromium；**1,114 engine assertions**, 2,000 seeded game maps/replay/validation, 30-floor progression and relic choices.
+- 50 floors checked for elite cadence: 20 elite floors, all three variants seen. Verified guard first-hit mitigation, brute windup, heavy strike and dodge cancel, hunter double movement.
+- 360 independently seeded elite kill/drop checks: gold 189, soul 109, relic 62; identical seed reproduces chest prizes and game state. All 3 reward types collect correctly, with reload/relic choice checks.
+- v0.1/v0.2/v0.3 save migration and original storage key preservation. Touch, choice modals, debug export, 320/375/390/430px without horizontal overflow; JS page exceptions: 0.
+- A real-origin localhost page navigation check was attempted but blocked by environment policy (ERR_BLOCKED_BY_ADMINISTRATOR). No iPhone Safari verification yet.
 
-## 本地測試：通過
-- 2000 隨機地圖 seed：出口可達、物件可達、存檔合法、確定重播，失敗各 0。
-- 30 層連續推進：每層祝福可選，層 1、4、7、10、13、16、19、22、25、28 額外聖物三選一。
-- 守衛樓層傳送門封印；回聲第三次攻擊、雷鏈傷害、吸血/金幣共鳴、荊棘反擊擊殺、火種每層一次重生通過。
-- v0.1/v0.2 內容轉換；舊 v0.2 存檔 key 保留；背包、重載後聖物、debug 紀錄正確。
-- 249 引擎斷言；320～430px 不產生水平 overflow；JavaScript pageerror 0。
+## Reproduce
+The repository `test_regression.py` provides the smaller smoke test (Python Playwright + /usr/bin/chromium). The full local test suite and screenshots are bundled in `midnight_dungeon_v0.4.zip`.
 
-## 限制
-- 本測試環境無法直接對本機伺服器或 GitHub Pages 導覽，因此測試使用 `page.set_content` 和 mock localStorage；尚未驗證實際網路載入或 Safari 儲存。
-- 高樓層數值溢位、真人遊玩平衡及真實 iPhone 觸控尚未測試。完整測試腳本、截圖與原始專案保存於 `midnight_dungeon_v0.3.zip`。
+## Remaining risks
+Real iPhone Safari performance/touch/storage, actual end-to-end GitHub Pages browser load, very deep floors and difficulty balance.
