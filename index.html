@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b1220">
   <meta name="color-scheme" content="dark">
-  <title>深夜地牢 | Midnight Dungeon v0.2</title>
+  <title>深夜地牢 | Midnight Dungeon v0.3</title>
   <style>
     :root {--bg:#090f1b; --panel:#141f31; --panel2:#1a2940; --border:#293951;--text:#edf5ff;--muted:#9cacc5;--accent:#8fe9c2;--amber:#f5c77b;--red:#ff8d94}
     *{box-sizing:border-box} html{background:var(--bg)} body{margin:0;min-height:100dvh;color:var(--text);font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at 50% -20%,#253959 0%,transparent 47%),var(--bg);overscroll-behavior-y:contain}
@@ -21,6 +21,9 @@
     canvas{display:block;width:min(100%,calc(43dvh * 11 / 13),440px);height:auto;aspect-ratio:11/13;border-radius:8px;touch-action:none;background:#0e1828;image-rendering:auto}
     .board-note{position:absolute;right:15px;top:17px;background:#0a1628a6;border:1px solid #3b4b5e;border-radius:20px;padding:4px 9px;color:#b7d6e0;font-size:10px;pointer-events:none}
     .notice{min-height:44px;display:flex;align-items:center;gap:10px;background:#172438;border:1px solid var(--border);padding:9px 13px;border-radius:11px;margin:10px 0;color:#cfdeec;font-size:12px;line-height:1.5}
+    .notice.proc{animation:procPulse .6s ease-out;border-color:#67bda5}
+    .notice.proc i{background:#ffe09c;box-shadow:0 0 14px #ffe09c}
+    @keyframes procPulse{0%{background:#385448;transform:scale(1.015)}100%{background:#172438;transform:scale(1)}}
     .notice i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px #8fe9c272;flex-shrink:0}
     .controls{display:grid;grid-template-columns: 1.5fr 1fr;gap:15px;align-items:center}
     .dpad{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:5px;max-width:218px;justify-self:center;width:100%}
@@ -29,6 +32,16 @@
     .progress-panel{background:#142237;border:1px solid #2b4261;border-radius:12px;margin:-3px 0 10px;padding:9px 12px}
     .progress-top{display:flex;align-items:center;gap:8px;font-size:11px;white-space:nowrap;justify-content:space-between;color:#c1d2e5}
     .progress-top strong{color:#a5f7d3;font-size:13px}.progress-top span:nth-child(2){color:#91d6c0}
+    .relic-strip{display:flex;align-items:center;gap:8px;min-height:35px;width:100%;margin:0 0 9px;border:1px solid #6f5a77;background:linear-gradient(90deg,#261c36,#1b2a40);border-radius:10px;padding:6px 11px;color:#eee4ff;font-size:11px;text-align:left}
+    .relic-tag{color:#e9c4ff;font-weight:850;white-space:nowrap}.relic-strip #relicSummary{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#c7b6dc}.relic-arrow{font-size:19px;line-height:1;color:#d8b7ed}
+    .relic-strip:focus-visible{outline:3px solid #edc8ff;outline-offset:2px}
+    .modal .rarity-common{color:#cbd8e9}.modal .rarity-rare{color:#8fe6ff}.modal .rarity-legendary{color:#ffe59a}
+    .modal .relic-pick{white-space:normal;text-align:left!important;padding:11px 13px;line-height:1.55}
+    .modal .relic-pick[data-rarity="rare"]{background:linear-gradient(90deg,#213b56,#264855);border-color:#6aa9c1}
+    .modal .relic-pick[data-rarity="legendary"]{background:linear-gradient(90deg,#533821,#534526);border-color:#d7ac5e;box-shadow:0 0 16px #b9973c40}
+    .modal .relic-pick .choice-title{display:block;font-size:14px;font-weight:850}
+    .modal .relic-pick .choice-text{display:block;font-size:11px;font-weight:500;opacity:.9;margin-top:2px}
+    .modal .relic-pick .choice-bonus{display:block;font-size:11px;color:#c4ffc9;margin-top:3px;font-weight:700}
     .xpbar{height:5px;border-radius:9px;overflow:hidden;background:#1f384a;margin-top:7px}.xpbar span{display:block;height:100%;width:0;background:linear-gradient(90deg,#70c4ee,#98f0bf);transition:width .18s}
     .stats{grid-template-columns:1.35fr 1fr 1.1fr}.stat-value{font-size:17px}.stat:nth-child(3) .stat-value{color:#bfa7ff}
     .top-actions{gap:5px;flex-shrink:0}.top-actions .mini{padding:8px 9px;min-height:38px;white-space:nowrap}
@@ -46,7 +59,7 @@
 <body>
 <main>
   <header>
-    <div class="brand"><div class="brand-icon" aria-hidden="true">✦</div><div><h1>深夜地牢</h1><p class="subtitle">ENDLESS DUNGEON · V0.2</p></div></div>
+    <div class="brand"><div class="brand-icon" aria-hidden="true">✦</div><div><h1>深夜地牢</h1><p class="subtitle">RELIC AWAKENING · V0.3</p></div></div>
     <div class="top-actions"><button class="mini" id="debugBtn" type="button">紀錄</button><button class="mini" id="campBtn" type="button">營地</button><button class="mini" id="restartBtn" type="button">重開</button></div>
   </header>
   <section class="stats" aria-label="遊戲狀態">
@@ -58,6 +71,7 @@
     <div class="progress-top"><strong id="levelText">LV 1</strong><span id="xpText">0 / 5 XP</span><span id="battleStats">攻擊 1 · 金幣 0 · 擊殺 0</span></div>
     <div class="xpbar"><span id="xpBar"></span></div>
   </section>
+  <button id="relicBtn" type="button" class="relic-strip" aria-label="查看聖物背包"><span class="relic-tag">◆ 聖物</span><span id="relicSummary">尚無聖物 · 第 1 層突破後獲得</span><span aria-hidden="true" class="relic-arrow">›</span></button>
   <div class="arena"><canvas id="board" width="440" height="520" aria-label="地牢遊戲畫面：可滑動移動角色"></canvas><div class="board-note" id="turnBadge">TURN 0</div></div>
   <div class="notice" aria-live="polite"><i></i><span id="notice">無盡地牢：打怪升級，突破每一層取得魂晶。</span></div>
   <section class="controls" aria-label="觸控遊戲操作">
@@ -74,13 +88,13 @@
       <button type="button" class="action secondary" id="waitBtn"><span aria-hidden="true">◷</span> 等待一回合</button>
     </div>
   </section>
-  <div class="hint">擊殺累積 XP・每層三選一強化・每 5 層挑戰守衛</div>
+  <div class="hint">擊殺升級・每層祝福・每 3 層聖物三選一・每 5 層挑戰守衛</div>
 </main>
 <div class="shade" id="overlay" role="presentation"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="eyebrow" id="modalEyebrow">MIDNIGHT DUNGEON</div><div class="big" id="modalIcon">✦</div><h2 id="modalTitle">提示</h2><p id="modalText"></p><textarea id="debugText" readonly hidden spellcheck="false"></textarea><div class="modal-actions" id="modalActions"></div></section></div>
 <script>
 (function(){
   'use strict';
-  const VERSION='0.2.0', WIDTH=11, HEIGHT=13, SAVE_KEY='midnight-dungeon-v0.2', OLD_SAVE_KEY='midnight-dungeon-v0.1';
+  const VERSION='0.3.0', WIDTH=11, HEIGHT=13, SAVE_KEY='midnight-dungeon-v0.3', V2_SAVE_KEY='midnight-dungeon-v0.2', OLD_SAVE_KEY='midnight-dungeon-v0.1';
   const DIRECTIONS={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
   const BLESSINGS={
     blade:{name:'狂戰之刃',description:'本輪攻擊 +1',icon:'⚔'},
@@ -90,6 +104,30 @@
     potion:{name:'鍊金師',description:'立即獲得 3 瓶藥水',icon:'✚'},
     crit:{name:'幸運一擊',description:'暴擊率 +12%，最多 60%',icon:'✧'}
   };
+  const RELICS={
+    echo:{name:'回聲之刃',icon:'⚔',rarity:'common',description:l=>'每第 3 次攻擊額外造成 '+(l+1)+' 傷害',synergy:'搭配狂戰之刃可更快斬殺敵人'},
+    greed:{name:'鍊金錢袋',icon:'◈',rarity:'common',description:l=>'擊殺額外取得 '+(2*l)+' 金幣',synergy:'搭配貪婪之手，擊殺時額外回復 HP'},
+    blood:{name:'緋月徽記',icon:'♥',rarity:'rare',description:l=>'擊殺額外回復 '+(2*l)+' HP',synergy:'搭配鮮血契約時，額外回復生命'},
+    storm:{name:'雷霆護符',icon:'ϟ',rarity:'rare',description:l=>'暴擊率 +'+(12*l)+'%；暴擊時雷鏈造成 '+(2*l)+' 傷害',synergy:'搭配幸運一擊，雷鏈傷害額外提升'},
+    thorns:{name:'荊棘胸針',icon:'✶',rarity:'rare',description:l=>'被近戰攻擊時反擊 '+(2*l)+' 傷害',synergy:'反擊擊殺也能取得 XP 與吸血'},
+    ember:{name:'不滅火種',icon:'♜',rarity:'legendary',description:l=>'每層首次致命傷時重生至 '+(5+2*(l-1))+' HP',synergy:'每次進入新樓層，都能再次觸發'}
+  };
+  const RARITY={common:{name:'普通',weight:6},rare:{name:'稀有',weight:3},legendary:{name:'傳說',weight:1}};
+  const emptyRelics=()=>Object.fromEntries(Object.keys(RELICS).map(k=>[k,0]));
+  const relicCount=s=>Object.values(s.relics).reduce((a,b)=>a+b,0);
+  function offerRelics(s){
+    const options=Object.keys(RELICS),offers=[];
+    for(let i=0;i<3;i++){
+      const total=options.reduce((sum,k)=>sum+RARITY[RELICS[k].rarity].weight,0);
+      let r=randInt(s,total),index=options.length-1;
+      for(let j=0;j<options.length;j++){r-=RARITY[RELICS[options[j]].rarity].weight;if(r<0){index=j;break;}}
+      offers.push(options.splice(index,1)[0]);
+    }return offers;
+  }
+  const relicHeal=(s,amount)=>{const n=Math.min(s.maxHp-s.hp,Math.max(0,amount));s.hp+=n;return n;};
+  const relicCritChance=s=>Math.min(.75,s.bonuses.crit*.12+s.relics.storm*.12);
+  const relicResonance=(s,id)=>(id==='blood'&&s.bonuses.vamp>0)||(id==='greed'&&s.bonuses.gold>0)||(id==='storm'&&s.bonuses.crit>0);
+  const relicRewardFloor=f=>f===1||(f>1&&(f-1)%3===0);
   const TALENTS={
     might:{name:'永恆鋒芒',description:'新冒險基礎攻擊 +1',base:3,step:2},
     life:{name:'生命之根',description:'新冒險最大 HP +3',base:2,step:2},
@@ -128,6 +166,7 @@
       hero:{x:1,y:1},map:[],exit:null,enemies:[],loot:[],actions:[],events:[],
       notice:'無盡地牢已開啟。擊敗怪物、升級，尋找傳送門！',
       bonuses:{attack:0,vamp:0,gold:0,crit:0},shopAttackBuys:0,
+      relics:emptyRelics(),pendingRelics:[],attackCount:0,emberUsedFloor:0,
       pendingBlessings:[],meta:m,runStartMeta:copyMeta(m),earnedShards:0,coinSettled:false};
     makeFloor(s);return s;
   }
@@ -190,16 +229,42 @@
     }
     return ups;
   }
+  function defeatEnemy(s,e){
+    if(!s.enemies.includes(e))return '';
+    s.enemies=s.enemies.filter(other=>other!==e);s.kills++;s.meta.totalKills++;
+    const coins=1+s.bonuses.gold+s.meta.talents.wealth+(e.boss?5+s.floor:0)+2*s.relics.greed;
+    s.coins+=coins;
+    const healed=relicHeal(s,s.bonuses.vamp+2*s.relics.blood+(s.bonuses.vamp>0?s.relics.blood:0)+(s.bonuses.gold>0?s.relics.greed:0));
+    const ups=gainExperience(s,1+Math.floor((s.floor-1)/3)+(e.boss?3:0));
+    return (e.boss?'★ 擊敗守衛！':'✦ 擊敗怪物！')+' +'+coins+' 金幣'+(healed?'，回復 '+healed+' HP':'')+(ups?'，升至 LV '+s.level:'');
+  }
+  function strike(s,e,damage){
+    e.hp-=damage;
+    return e.hp<=0?defeatEnemy(s,e):'';
+  }
   function enemyTurn(s){
-    const d=distances(s,s.hero.x,s.hero.y);let damage=0;
-    for(const e of s.enemies){
+    const d=distances(s,s.hero.x,s.hero.y);let damage=0;const effects=[];
+    for(const e of [...s.enemies]){
       if(s.status!=='playing')break;
+      if(!s.enemies.includes(e))continue;
       const steps=d[e.y][e.x];if(steps<0||steps>7)continue;
-      if(steps===1){const hit=e.damage||1;s.hp-=hit;damage+=hit;
-        if(s.hp<=0){s.hp=0;s.status='lost';settleGold(s);break;}continue;}
+      if(steps===1){
+        const hit=e.damage||1;s.hp-=hit;damage+=hit;
+        // Reflect does not erase damage already received. A reflected kill still pays XP/coins.
+        if(s.relics.thorns){
+          const reflected=2*s.relics.thorns,reflectKill=strike(s,e,reflected);
+          effects.push('✶ 荊棘反擊 '+reflected+' 傷害'+(reflectKill?'！'+reflectKill:''));
+        }
+        if(s.hp<=0){
+          if(s.relics.ember>0&&s.emberUsedFloor!==s.floor){
+            s.emberUsedFloor=s.floor;s.hp=Math.min(s.maxHp,5+2*(s.relics.ember-1));
+            effects.push('♜ 火種重生！本層僅能觸發一次');
+          }else{s.hp=0;s.status='lost';settleGold(s);break;}
+        }continue;
+      }
       const candidates=neighbors(e.x,e.y).filter(([x,y])=>isWalkable(s,x,y)&&d[y][x]>=0&&d[y][x]<steps&&!(x===s.hero.x&&y===s.hero.y)&&!s.enemies.some(other=>other!==e&&other.x===x&&other.y===y));
       if(candidates.length){candidates.sort((a,b)=>d[a[1]][a[0]]-d[b[1]][b[0]]);e.x=candidates[0][0];e.y=candidates[0][1];}
-    }return damage;
+    }return {damage,effects};
   }
   function applyBlessing(s,id){
     if(id==='blade')s.bonuses.attack++;
@@ -210,14 +275,22 @@
     if(id==='crit')s.bonuses.crit++;
   }
   function applyAction(s,a){
-    if((s.status==='playing'||s.status==='choosing')&&a==='retire'){
+    if((s.status==='playing'||s.status==='choosing'||s.status==='relic')&&a==='retire'){
       s.status='retired';settleGold(s);s.actions.push(a);log(s,'返回營地，魂晶已永久保留。');return true;
     }
     if(s.status==='choosing'){
       if(!a.startsWith('blessing:'))return false;
       const id=a.slice(9);if(!s.pendingBlessings.includes(id))return false;
-      applyBlessing(s,id);s.pendingBlessings=[];s.status='playing';s.actions.push(a);
+      applyBlessing(s,id);s.pendingBlessings=[];
+      s.status=s.pendingRelics.length?'relic':'playing';s.actions.push(a);
       log(s,'✦ 選擇 '+BLESSINGS[id].name+'！ '+BLESSINGS[id].description);return true;
+    }
+    if(s.status==='relic'){
+      if(!a.startsWith('relic:'))return false;
+      const id=a.slice(6);if(!s.pendingRelics.includes(id))return false;
+      s.relics[id]++;s.pendingRelics=[];s.status='playing';s.actions.push(a);
+      log(s,(RELICS[id].rarity==='legendary'?'★ 傳說聖物！':'◆ 獲得聖物！')+' '+RELICS[id].name+' Lv.'+s.relics[id]+'！ '+RELICS[id].description(s.relics[id]));
+      return true;
     }
     if(s.status==='retired'||s.status==='lost'){
       if(!a.startsWith('talent:'))return false;
@@ -249,16 +322,24 @@
       if(!isWalkable(s,nx,ny)){log(s,'前面是牆壁。');return false;}
       const enemy=enemyAt(s,nx,ny);
       if(enemy){
-        const crit=random(s)<Math.min(.6,s.bonuses.crit*.12);
-        const hit=crit?Math.ceil(attack(s)*1.75):attack(s);enemy.hp-=hit;
-        msg=(crit?'✧ 暴擊！':'⚔ 攻擊！')+'造成 '+hit+' 傷害。';
-        if(enemy.hp<=0){
-          s.enemies=s.enemies.filter(e=>e!==enemy);s.kills++;s.meta.totalKills++;
-          const earnedCoins=1+s.bonuses.gold+s.meta.talents.wealth+(enemy.boss?5+s.floor:0);
-          s.coins+=earnedCoins;
-          const healed=Math.min(s.maxHp-s.hp,s.bonuses.vamp);s.hp+=healed;
-          const levelUps=gainExperience(s,1+Math.floor((s.floor-1)/3)+(enemy.boss?3:0));
-          msg=(enemy.boss?'★ 擊敗守衛！':'✦ 擊敗怪物！')+' +'+earnedCoins+' 金幣'+(healed?'，吸血 +'+healed+' HP':'')+(levelUps?'，升級至 LV '+s.level+'！':'');
+        s.attackCount++;
+        const crit=random(s)<relicCritChance(s);
+        const hit=crit?Math.ceil(attack(s)*1.75):attack(s);
+        const kill=strike(s,enemy,hit);
+        msg=(crit?'✧ 暴擊！':'⚔ 攻擊！')+'造成 '+hit+' 傷害。'+(kill?' '+kill:'');
+        if(s.relics.echo>0&&s.attackCount%3===0){
+          const extra=s.relics.echo+1;
+          const target=s.enemies.includes(enemy)?enemy:s.enemies.find(e=>Math.abs(e.x-nx)+Math.abs(e.y-ny)<=1);
+          if(target){const hit2=strike(s,target,extra);msg+=' ⚔ 回聲追擊 '+extra+'！'+(hit2?' '+hit2:'');}
+        }
+        if(crit&&s.relics.storm>0){
+          const targets=s.enemies.filter(e=>e!==enemy&&Math.abs(e.x-nx)+Math.abs(e.y-ny)<=3)
+            .sort((a,b)=>(Math.abs(a.x-nx)+Math.abs(a.y-ny))-(Math.abs(b.x-nx)+Math.abs(b.y-ny))||a.id.localeCompare(b.id));
+          if(targets.length){
+            const extra=2*s.relics.storm+(s.bonuses.crit>0?s.relics.storm:0);
+            const chainKill=strike(s,targets[0],extra);
+            msg+=' ϟ 雷鏈 '+extra+'！'+(chainKill?' '+chainKill:'');
+          }
         }
       }else{
         if(nx===s.exit.x&&ny===s.exit.y&&s.enemies.some(e=>e.boss)){
@@ -275,20 +356,27 @@
       s.meta.shards+=earned;s.earnedShards+=earned;
       s.floor++;s.meta.highestFloor=Math.max(s.meta.highestFloor,s.floor);
       s.hp=clamp(s.hp+2,0,s.maxHp);makeFloor(s);
-      s.pendingBlessings=offerBlessings(s);s.status='choosing';
-      log(s,'✦ 突破第 '+completed+' 層！永久獲得 '+earned+' 魂晶。從三種祝福中選一項。');return true;
+      s.pendingBlessings=offerBlessings(s);s.pendingRelics=relicRewardFloor(completed)?offerRelics(s):[];s.status='choosing';
+      log(s,'✦ 突破第 '+completed+' 層！獲得 '+earned+' 魂晶。'+(s.pendingRelics.length?'本層也發現了聖物！':'')+'先選一項祝福。');return true;
     }
-    const damage=enemyTurn(s);
+    const outcome=enemyTurn(s),damage=outcome.damage;
     if(s.status==='lost')msg='☾ 你倒下了！已將金幣折算為魂晶，返回營地強化自己。';
     else if(damage)msg+=' 受到 '+damage+' 點傷害。';
+    if(outcome.effects.length)msg+=' '+outcome.effects.join(' · ');
     log(s,msg);return true;
   }
   const goodInt=(n,min=0)=>Number.isSafeInteger(n)&&n>=min;
   function validMeta(m){return !!(m&&goodInt(m.shards)&&goodInt(m.highestFloor,1)&&goodInt(m.totalRuns)&&goodInt(m.totalKills)&&m.talents&&['might','life','wealth'].every(k=>goodInt(m.talents[k])));}
   function validateSave(s){
-    return !!(s&&s.version===VERSION&&goodInt(s.seed)&&s.seed<=4294967295&&goodInt(s.rng)&&s.rng<=4294967295&&goodInt(s.floor,1)&&goodInt(s.turn)&&goodInt(s.level,1)&&goodInt(s.xp)&&goodInt(s.maxHp,1)&&goodInt(s.hp)&&s.hp<=s.maxHp&&goodInt(s.coins)&&goodInt(s.potions)&&goodInt(s.kills)&&validMeta(s.meta)&&validMeta(s.runStartMeta)&&s.bonuses&&['attack','vamp','gold','crit'].every(k=>goodInt(s.bonuses[k]))&&goodInt(s.shopAttackBuys)&&goodInt(s.earnedShards)&&typeof s.coinSettled==='boolean'&&
+    return !!(s&&s.version===VERSION&&goodInt(s.seed)&&s.seed<=4294967295&&goodInt(s.rng)&&s.rng<=4294967295&&goodInt(s.floor,1)&&goodInt(s.turn)&&goodInt(s.level,1)&&goodInt(s.xp)&&goodInt(s.maxHp,1)&&goodInt(s.hp)&&s.hp<=s.maxHp&&goodInt(s.coins)&&goodInt(s.potions)&&goodInt(s.kills)&&validMeta(s.meta)&&validMeta(s.runStartMeta)&&s.bonuses&&['attack','vamp','gold','crit'].every(k=>goodInt(s.bonuses[k]))&&goodInt(s.shopAttackBuys)&&goodInt(s.earnedShards)&&typeof s.coinSettled==='boolean'&&s.relics&&Object.keys(RELICS).every(k=>goodInt(s.relics[k]))&&Array.isArray(s.pendingRelics)&&s.pendingRelics.length<=3&&new Set(s.pendingRelics).size===s.pendingRelics.length&&s.pendingRelics.every(k=>Object.hasOwn(RELICS,k))&&goodInt(s.attackCount)&&goodInt(s.emberUsedFloor)&&
       s.hero&&goodInt(s.hero.x)&&goodInt(s.hero.y)&&Array.isArray(s.map)&&s.map.length===HEIGHT&&s.map.every(row=>Array.isArray(row)&&row.length===WIDTH&&row.every(c=>c===0||c===1))&&isWalkable(s,s.hero.x,s.hero.y)&&s.exit&&goodInt(s.exit.x)&&goodInt(s.exit.y)&&isWalkable(s,s.exit.x,s.exit.y)&&Array.isArray(s.enemies)&&s.enemies.every(e=>isWalkable(s,e.x,e.y)&&goodInt(e.hp,1)&&goodInt(e.maxHp,1)&&goodInt(e.damage,1)&&typeof e.boss==='boolean')&&
-      Array.isArray(s.loot)&&Array.isArray(s.actions)&&Array.isArray(s.events)&&Array.isArray(s.pendingBlessings)&&s.pendingBlessings.every(k=>Object.hasOwn(BLESSINGS,k))&&['playing','choosing','lost','retired'].includes(s.status));
+      Array.isArray(s.loot)&&Array.isArray(s.actions)&&Array.isArray(s.events)&&Array.isArray(s.pendingBlessings)&&s.pendingBlessings.every(k=>Object.hasOwn(BLESSINGS,k))&&['playing','choosing','relic','lost','retired'].includes(s.status));
+  }
+  function migrateV2(old){
+    if(!old||old.version!=='0.2.0')return null;
+    // Keep the entire in-progress v0.2 run and old backup key intact.
+    const s={...old,version:VERSION,relics:emptyRelics(),pendingRelics:[],attackCount:0,emberUsedFloor:0};
+    return validateSave(s)?s:null;
   }
   function migrateLegacy(old){
     if(!old||old.version!=='0.1.0'||!old.map||!Array.isArray(old.enemies)||!Array.isArray(old.loot))return null;
@@ -310,6 +398,8 @@
   function restore(){try{
     const raw=localStorage.getItem(SAVE_KEY);
     if(raw){const data=JSON.parse(raw);if(validateSave(data))return data;}
+    const v2=localStorage.getItem(V2_SAVE_KEY);
+    if(v2){const data=migrateV2(JSON.parse(v2));if(data)return data;}
     const legacy=localStorage.getItem(OLD_SAVE_KEY);
     if(legacy)return migrateLegacy(JSON.parse(legacy));
   }catch(_){/* blocked or invalid */}return null;}
@@ -358,7 +448,12 @@
     writeText($('levelText'),'LV '+fmt(game.level));writeText($('xpText'),fmt(game.xp)+' / '+fmt(xpRequired(game.level))+' XP');
     $('xpBar').style.width=(100*game.xp/xpRequired(game.level))+'%';
     writeText($('battleStats'),'攻擊 '+fmt(attack(game))+'　·　金幣 '+fmt(game.coins)+'　·　擊殺 '+fmt(game.kills));
+    const owned=Object.keys(RELICS).filter(id=>game.relics[id]);
+    writeText($('relicSummary'),owned.length?owned.slice(0,4).map(id=>RELICS[id].icon+RELICS[id].name+(game.relics[id]>1?'×'+game.relics[id]:'')).join('  ')+'  ·  '+relicCount(game)+' 件':'尚無聖物 · 第 1 層突破後獲得');
     writeText($('potionText'),'× '+fmt(game.potions));writeText($('notice'),game.notice);writeText($('turnBadge'),'TURN '+fmt(game.turn));
+    const feedback=/雷鏈|回聲追擊|火種重生|荊棘反擊|傳說聖物|連攜/;
+    const banner=$('notice').parentElement;banner.classList.remove('proc');
+    if(feedback.test(game.notice)){void banner.offsetWidth;banner.classList.add('proc');}
     $('potionBtn').disabled=game.status!=='playing';$('waitBtn').disabled=game.status!=='playing';$('shopBtn').disabled=game.status!=='playing';
     renderBoard(game);
   }
@@ -368,7 +463,17 @@
     $('debugText').hidden=!opts.debug;if(opts.debug)$('debugText').value=makeReport();
     const actions=$('modalActions');actions.replaceChildren();for(const button of opts.buttons){
       const el=document.createElement('button');el.type='button';el.textContent=button.label;el.disabled=!!button.disabled;
-      if(button.secondary)el.classList.add('secondary');el.addEventListener('click',button.action);actions.appendChild(el);
+      if(button.secondary)el.classList.add('secondary');
+      if(button.relic){
+        el.classList.add('relic-pick');el.dataset.rarity=button.rarity;
+        const r=RELICS[button.relic],lv=game.relics[button.relic]+1;
+        el.replaceChildren();
+        const title=document.createElement('span');title.className='choice-title';title.textContent=r.icon+' 【'+RARITY[r.rarity].name+'】 '+r.name+' Lv.'+lv;
+        const descr=document.createElement('span');descr.className='choice-text';descr.textContent=r.description(lv);
+        const combo=document.createElement('span');combo.className='choice-bonus';combo.textContent=(relicResonance(game,button.relic)?'✦ 連攜已啟動：':'✦ 連攜：')+r.synergy;
+        el.append(title,descr,combo);
+      }
+      el.addEventListener('click',button.action);actions.appendChild(el);
     }$('overlay').classList.add('open');
   }
   function closeModal(){$('overlay').classList.remove('open');overlayMode='';}
@@ -376,7 +481,7 @@
     return JSON.stringify({game:'Midnight Dungeon',version:VERSION,seed:game.seed,floor:game.floor,turn:game.turn,status:game.status,
       level:game.level,xp:game.xp,hp:game.hp,maxHp:game.maxHp,attack:attack(game),coins:game.coins,kills:game.kills,
       meta:game.meta,runStartMeta:game.runStartMeta,earnedShards:game.earnedShards,bonuses:game.bonuses,
-      offeredBlessings:game.pendingBlessings,actions:game.actions,events:game.events,
+      offeredBlessings:game.pendingBlessings,offeredRelics:game.pendingRelics,relics:game.relics,attackCount:game.attackCount,emberUsedFloor:game.emberUsedFloor,actions:game.actions,events:game.events,
       map:game.map.map(row=>row.map(n=>n?'#':'.').join(''))},null,2);
   }
   function openDebug(){openModal({mode:'debug',icon:'⌘',title:'測試紀錄',text:'包含亂數種子、永久天賦、指令和目前狀態，可複製回 ChatGPT。',debug:true,buttons:[
@@ -389,6 +494,20 @@
     openModal({mode:'reward',icon:milestone?'★':'✦',eyebrow:'FLOOR CLEARED',
       title:'第 '+(game.floor-1)+' 層突破！',text:'已取得永久魂晶。挑選一種本輪強化，打造自己的流派：',
       buttons:game.pendingBlessings.map(id=>({label:BLESSINGS[id].icon+' '+BLESSINGS[id].name+'｜'+BLESSINGS[id].description,action:()=>performFromModal('blessing:'+id)}))});
+  }
+  function openRelicDetails(){
+    const owned=Object.keys(RELICS).filter(k=>game.relics[k]);
+    const text=owned.length?owned.map(id=>{
+      const r=RELICS[id],lv=game.relics[id];return r.icon+' '+r.name+' Lv.'+lv+'【'+RARITY[r.rarity].name+'】\n'+r.description(lv)+(relicResonance(game,id)?'\n✦ 共鳴已啟動！':'');
+    }).join('\n\n'):'尚未取得聖物。突破第 1、4、7、10… 層後，先選祝福，再從三件隨機聖物中挑一件；同類聖物能重複取得並升級。';
+    openModal({mode:'relic-bag',icon:'◆',eyebrow:'RELIC COLLECTION',title:'本輪聖物 · '+relicCount(game)+' 件',text,buttons:[{label:'繼續探索',action:()=>{closeModal();endIfNeeded();}}]});
+  }
+  function openRelicChoice(){
+    const buttons=game.pendingRelics.map(id=>{
+      const r=RELICS[id],lv=game.relics[id]+1;
+      return {label:r.icon+'【'+RARITY[r.rarity].name+'】 '+r.name+' Lv.'+lv+'｜'+r.description(lv),relic:id,rarity:r.rarity,action:()=>performFromModal('relic:'+id)};
+    });
+    openModal({mode:'relic-choice',icon:'◆',eyebrow:'RELIC AWAKENED',title:'發現聖物！',text:'挑一件永久留在本輪冒險的聖物。同類可堆疊，與祝福組合會觸發額外效果。',buttons});
   }
   function openShop(){
     if(game.status!=='playing')return;
@@ -430,6 +549,7 @@
   }
   function endIfNeeded(){
     if(game.status==='choosing')openBlessing();
+    else if(game.status==='relic')openRelicChoice();
     else if(game.status==='lost'||game.status==='retired')openCamp();
   }
   function action(a){if(overlayMode)return;const changed=applyAction(game,a);if(changed)store();render();endIfNeeded();}
@@ -438,12 +558,13 @@
   $('waitBtn').addEventListener('click',()=>action('wait'));
   $('potionBtn').addEventListener('click',()=>action('potion'));
   $('shopBtn').addEventListener('click',openShop);
+  $('relicBtn').addEventListener('click',openRelicDetails);
   $('campBtn').addEventListener('click',openCamp);
   $('debugBtn').addEventListener('click',openDebug);
   $('restartBtn').addEventListener('click',askRestart);
-  $('overlay').addEventListener('click',e=>{if(e.target===$('overlay')&&['shop','debug','camp-peek','confirm'].includes(overlayMode)){closeModal();endIfNeeded();}});
+  $('overlay').addEventListener('click',e=>{if(e.target===$('overlay')&&['shop','debug','camp-peek','confirm','relic-bag'].includes(overlayMode)){closeModal();endIfNeeded();}});
   document.addEventListener('keydown',e=>{
-    if(e.key==='Escape'&&overlayMode&&['shop','debug','camp-peek','confirm'].includes(overlayMode)){closeModal();endIfNeeded();return;}
+    if(e.key==='Escape'&&overlayMode&&['shop','debug','camp-peek','confirm','relic-bag'].includes(overlayMode)){closeModal();endIfNeeded();return;}
     if(overlayMode)return;
     const dirs={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right',h:'potion',' ':'wait'};
     const act=dirs[e.key];if(act){e.preventDefault();action(act);}
@@ -461,7 +582,7 @@
   });
   canvas.addEventListener('pointercancel',()=>{touch=null;});
   // A deterministic, scriptable API used for regression tests, not an online service.
-  window.MidnightDungeonTest={createState,applyAction,distances,validateSave,migrateLegacy,attack,xpRequired,offerBlessings,talentCost,settleGold,VERSION,WIDTH,HEIGHT};
+  window.MidnightDungeonTest={createState,applyAction,distances,validateSave,migrateV2,migrateLegacy,attack,xpRequired,offerBlessings,offerRelics,relicRewardFloor,relicCritChance,defeatEnemy,enemyTurn,talentCost,settleGold,VERSION,WIDTH,HEIGHT};
   game=restore()||createState((Date.now()>>>0)||1);store();render();endIfNeeded();
 })();
 </script>
