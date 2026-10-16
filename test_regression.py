@@ -1,4 +1,4 @@
-"""Core Midnight Dungeon v0.4 engine and mobile smoke tests."""
+"""Core Midnight Dungeon v0.5 engine and mobile smoke tests."""
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 import json
@@ -9,7 +9,7 @@ with sync_playwright() as pw:
     errors=[]
     page.on("pageerror",lambda e:errors.append(str(e)))
     page.set_content(index.read_text(encoding="utf-8"))
-    assert page.title()=="深夜地牢 | Midnight Dungeon v0.4"
+    assert page.title()=="深夜地牢 | Midnight Dungeon v0.5"
     result=page.evaluate("""() => {
       const api=window.MidnightDungeonTest, out={seeds:2000,unreachable:0,invalid:0,replay:0,boss:0,flows:0,relicOffers:0};
       for(let seed=1;seed<=2000;seed++){
@@ -64,7 +64,7 @@ with sync_playwright() as pw:
       const choice=chest.pendingRelics[0];api.applyAction(chest,"relic:"+choice);
       if(chest.status!=="playing"||chest.relics[choice]!==1||!api.validateSave(chest))throw Error("claim elite relic");
       const prev=api.createState(46);prev.version="0.3.0";delete prev.relicSource;
-      if(!api.migrateV3(prev)||api.migrateV3(prev).version!=="0.4.0")throw Error("v0.3 migrate");
+      if(!api.migrateV3(prev)||api.migrateV3(prev).version!=="0.5.0")throw Error("v0.3 migrate");
       out.eliteChecks=7;
       return out;
     }""")
@@ -73,7 +73,7 @@ with sync_playwright() as pw:
     page.locator('[data-dir="right"]').click()
     assert page.locator("#turnBadge").inner_text()=="TURN 1"
     page.locator("#debugBtn").click()
-    assert json.loads(page.locator("#debugText").input_value())["version"]=="0.4.0"
+    assert json.loads(page.locator("#debugText").input_value())["version"]=="0.5.0"
     assert not errors,errors
     print(json.dumps(result,ensure_ascii=False))
     browser.close()

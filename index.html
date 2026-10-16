@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b1220">
   <meta name="color-scheme" content="dark">
-  <title>深夜地牢 | Midnight Dungeon v0.4</title>
+  <title>深夜地牢 | Midnight Dungeon v0.5</title>
   <style>
     :root {--bg:#090f1b; --panel:#141f31; --panel2:#1a2940; --border:#293951;--text:#edf5ff;--muted:#9cacc5;--accent:#8fe9c2;--amber:#f5c77b;--red:#ff8d94}
     *{box-sizing:border-box} html{background:var(--bg)} body{margin:0;min-height:100dvh;color:var(--text);font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at 50% -20%,#253959 0%,transparent 47%),var(--bg);overscroll-behavior-y:contain}
@@ -55,13 +55,45 @@
     .shade{position:fixed;inset:0;background:rgba(4,9,17,.76);display:none;align-items:center;justify-content:center;padding:20px;z-index:5;backdrop-filter:blur(7px)}.shade.open{display:flex}.modal{width:min(100%,410px);border:1px solid #516a80;border-radius:20px;background:#17263b;box-shadow:0 35px 90px #0009;padding:23px;text-align:center;max-height:85dvh;overflow-y:auto}.modal .eyebrow{font-weight:800;letter-spacing:.14em;color:var(--accent);font-size:11px}.modal h2{font-size:26px;margin:9px 0;color:#f6f6fa}.modal p{color:#bdcde0;line-height:1.7;font-size:14px}.modal .big{font-size:36px;margin-top:3px}.modal .modal-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:15px;justify-content:center}.modal button{padding:12px 15px;border-radius:11px;border:1px solid #5d9787;background:#265548;font-size:13px;font-weight:750}.modal button.secondary{background:#293b52;border-color:#5a6d89}.modal textarea{margin-top:8px;width:100%;height:200px;background:#0c1626;color:#cce6eb;border:1px solid #415a70;border-radius:10px;padding:10px;font:11px/1.5 ui-monospace,monospace;resize:vertical;text-align:left}
     @media(max-width:390px){h1{font-size:17px}.stat-value{font-size:16px}.progress-top{font-size:10px;gap:5px}.top-actions .mini{padding:7px 8px}.brand-icon{width:36px;height:36px}}
     @media (max-height:750px){header{margin-bottom:7px}.stats{margin-bottom:7px}.stat{min-height:54px;padding:6px 10px}.arena{padding:7px}canvas{width:min(100%,calc(41dvh * 11 / 13),440px)}.notice{min-height:37px;margin:7px 0;padding:6px 10px}.control{min-height:42px}.action{min-height:55px}.hint{margin-top:10px}}
+    /* V0.5 feedback layer: effects never intercept the swipe/pointer input on canvas. */
+    .fx-layer{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden;border-radius:16px}
+    .fx-float{position:absolute;display:inline-block;min-width:18px;text-align:center;white-space:nowrap;pointer-events:none;
+      font-variant-numeric:tabular-nums;font-weight:950;font-size:15px;line-height:1.1;letter-spacing:.015em;
+      color:#fff5e0;-webkit-text-stroke:.45px #1b2633;text-shadow:0 2px 0 #132033,0 0 11px #07131d,0 0 7px #09172a;
+      animation:fxRise 1.08s cubic-bezier(.2,.75,.2,1) both;will-change:transform,opacity}
+    .fx-float.damage{color:#fff6ed}.fx-float.crit{color:#ffe185;font-size:19px;text-shadow:0 0 10px #eeac53,0 2px 1px #493018}
+    .fx-float.hurt{color:#ff8c9c}.fx-float.heal{color:#9af8c0}.fx-float.kill{color:#fff0a8;font-size:13px}
+    .fx-float.gold{color:#ffd56e;font-size:13px}.fx-float.shard{color:#b9a1ff}
+    .fx-float.level{color:#a4ffdb;font-size:18px}.fx-float.chain{color:#aadaff}
+    .fx-float.jackpot{font-size:18px;color:#ffdb86;letter-spacing:.06em;animation:fxRise 1.18s cubic-bezier(.2,.75,.2,1) both}
+    .fx-flash{position:absolute;width:72px;height:72px;pointer-events:none;border-radius:50%;opacity:0;
+      background:radial-gradient(circle,#fff9d29c 0%,#ffd86e70 22%,#ffcd6d22 50%,transparent 72%);transform:translate(-50%,-50%);
+      animation:fxFlash .52s ease-out both}
+    .fx-flash.rare{width:116px;height:116px;background:radial-gradient(circle,#d9a9ff98 0%,#ad88ff62 32%,transparent 72%)}
+    @keyframes fxRise{0%{transform:translate(calc(-50% + var(--dx,0px)),0) scale(.66);opacity:0}
+      14%{transform:translate(calc(-50% + var(--dx,0px)),-8px) scale(1.15);opacity:1}
+      78%{transform:translate(calc(-50% + var(--dx,0px)),-25px) scale(1);opacity:1}
+      100%{transform:translate(calc(-50% + var(--dx,0px)),-48px) scale(.94);opacity:0}}
+    @keyframes fxFlash{0%{transform:translate(-50%,-50%) scale(.3);opacity:0}32%{opacity:1}100%{transform:translate(-50%,-50%) scale(1.55);opacity:0}}
+    .arena.impact-crit{animation:arenaImpact .24s ease-out}
+    .arena.impact-level{animation:arenaImpact .32s ease-out}
+    @keyframes arenaImpact{0%{filter:brightness(1.24)}40%{filter:brightness(1.08)}100%{filter:brightness(1)}}
+    .shade.open .modal{animation:rewardEnter .23s cubic-bezier(.18,.81,.22,1) both}
+    .shade.jackpot .modal{border-color:#e6b86a;box-shadow:0 0 38px #d8a3433d,0 35px 90px #0009}
+    .shade.jackpot .eyebrow{color:#ffdf95}
+    .modal .relic-pick[data-rarity="legendary"]{position:relative;overflow:hidden}
+    .modal .relic-pick[data-rarity="legendary"]::after{content:'';position:absolute;inset:-40% -70%;pointer-events:none;
+      background:linear-gradient(110deg,transparent 44%,#fff5c737 49%,transparent 54%);animation:raritySweep 1.5s ease-out 1 both}
+    @keyframes raritySweep{from{transform:translateX(-65%)}to{transform:translateX(65%)}}
+    @keyframes rewardEnter{from{opacity:.2;transform:translateY(15px) scale(.965)}to{opacity:1;transform:translateY(0) scale(1)}}
+    @media (prefers-reduced-motion:reduce){.fx-float,.fx-flash,.arena.impact-crit,.arena.impact-level,.shade.open .modal,.modal .relic-pick[data-rarity="legendary"]::after{animation:none!important}}
     @media (prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;animation:none!important}}
   </style>
 </head>
 <body>
 <main>
   <header>
-    <div class="brand"><div class="brand-icon" aria-hidden="true">✦</div><div><h1>深夜地牢</h1><p class="subtitle">ELITE HUNT · V0.4</p></div></div>
+    <div class="brand"><div class="brand-icon" aria-hidden="true">✦</div><div><h1>深夜地牢</h1><p class="subtitle">IMPACT EDITION · V0.5</p></div></div>
     <div class="top-actions"><button class="mini" id="debugBtn" type="button">紀錄</button><button class="mini" id="campBtn" type="button">營地</button><button class="mini" id="restartBtn" type="button">重開</button></div>
   </header>
   <section class="stats" aria-label="遊戲狀態">
@@ -75,7 +107,7 @@
   </section>
   <button id="relicBtn" type="button" class="relic-strip" aria-label="查看聖物背包"><span class="relic-tag">◆ 聖物</span><span id="relicSummary">尚無聖物 · 第 1 層突破後獲得</span><span aria-hidden="true" class="relic-arrow">›</span></button>
   <div id="eliteAlert" class="elite-alert" aria-live="polite" hidden></div>
-  <div class="arena"><canvas id="board" width="440" height="520" aria-label="地牢遊戲畫面：可滑動移動角色"></canvas><div class="board-note" id="turnBadge">TURN 0</div></div>
+  <div class="arena" id="arena"><canvas id="board" width="440" height="520" aria-label="地牢遊戲畫面：可滑動移動角色"></canvas><div id="fxLayer" class="fx-layer" aria-hidden="true"></div><div class="board-note" id="turnBadge">TURN 0</div></div>
   <div class="notice" aria-live="polite"><i></i><span id="notice">無盡地牢：打怪升級，突破每一層取得魂晶。</span></div>
   <section class="controls" aria-label="觸控遊戲操作">
     <div class="dpad">
@@ -91,13 +123,13 @@
       <button type="button" class="action secondary" id="waitBtn"><span aria-hidden="true">◷</span> 等待一回合</button>
     </div>
   </section>
-  <div class="hint">擊殺升級・偶數層狩獵精英・稀有寶箱・每 3 層聖物・每 5 層守衛</div>
+  <div class="hint">擊殺升級・精英寶箱與稀有聖物・暴擊與成長特效・每 5 層守衛</div>
 </main>
 <div class="shade" id="overlay" role="presentation"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="eyebrow" id="modalEyebrow">MIDNIGHT DUNGEON</div><div class="big" id="modalIcon">✦</div><h2 id="modalTitle">提示</h2><p id="modalText"></p><textarea id="debugText" readonly hidden spellcheck="false"></textarea><div class="modal-actions" id="modalActions"></div></section></div>
 <script>
 (function(){
   'use strict';
-  const VERSION='0.4.0', WIDTH=11, HEIGHT=13, SAVE_KEY='midnight-dungeon-v0.4', V3_SAVE_KEY='midnight-dungeon-v0.3', V2_SAVE_KEY='midnight-dungeon-v0.2', OLD_SAVE_KEY='midnight-dungeon-v0.1';
+  const VERSION='0.5.0', WIDTH=11, HEIGHT=13, SAVE_KEY='midnight-dungeon-v0.5', V4_SAVE_KEY='midnight-dungeon-v0.4', V3_SAVE_KEY='midnight-dungeon-v0.3', V2_SAVE_KEY='midnight-dungeon-v0.2', OLD_SAVE_KEY='midnight-dungeon-v0.1';
   const DIRECTIONS={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
   const BLESSINGS={
     blade:{name:'狂戰之刃',description:'本輪攻擊 +1',icon:'⚔'},
@@ -423,6 +455,12 @@
       s.hero&&goodInt(s.hero.x)&&goodInt(s.hero.y)&&Array.isArray(s.map)&&s.map.length===HEIGHT&&s.map.every(row=>Array.isArray(row)&&row.length===WIDTH&&row.every(c=>c===0||c===1))&&isWalkable(s,s.hero.x,s.hero.y)&&s.exit&&goodInt(s.exit.x)&&goodInt(s.exit.y)&&isWalkable(s,s.exit.x,s.exit.y)&&Array.isArray(s.enemies)&&s.enemies.every(e=>isWalkable(s,e.x,e.y)&&goodInt(e.hp,1)&&goodInt(e.maxHp,1)&&goodInt(e.damage,1)&&typeof e.boss==='boolean'&&(!e.eliteType||Object.hasOwn(ELITES,e.eliteType))&&(!e.eliteType||typeof e.windup==='boolean')&&(!e.eliteType||goodInt(e.armor))&&(!e.eliteType||!e.boss))&&
       Array.isArray(s.loot)&&s.loot.every(l=>isWalkable(s,l.x,l.y)&&['coin','potion','cache'].includes(l.type)&&(l.type!=='cache'||Object.hasOwn(CACHE_PRIZES,l.prize)))&&Array.isArray(s.actions)&&Array.isArray(s.events)&&Array.isArray(s.pendingBlessings)&&s.pendingBlessings.every(k=>Object.hasOwn(BLESSINGS,k))&&['playing','choosing','relic','lost','retired'].includes(s.status));
   }
+  function migrateV4(old){
+    if(!old||old.version!=='0.4.0')return null;
+    // No rules or map shape changed: copy the current run and every permanent talent.
+    const s={...old,version:VERSION};
+    return validateSave(s)?s:null;
+  }
   function migrateV3(old){
     if(!old||old.version!=='0.3.0')return null;
     const s={...old,version:VERSION,relicSource:'floor'};
@@ -454,6 +492,8 @@
   function restore(){try{
     const raw=localStorage.getItem(SAVE_KEY);
     if(raw){const data=JSON.parse(raw);if(validateSave(data))return data;}
+    const v4=localStorage.getItem(V4_SAVE_KEY);
+    if(v4){const data=migrateV4(JSON.parse(v4));if(data)return data;}
     const v3=localStorage.getItem(V3_SAVE_KEY);
     if(v3){const data=migrateV3(JSON.parse(v3));if(data)return data;}
     const v2=localStorage.getItem(V2_SAVE_KEY);
@@ -525,6 +565,81 @@
     $('potionBtn').disabled=game.status!=='playing';$('waitBtn').disabled=game.status!=='playing';$('shopBtn').disabled=game.status!=='playing';
     renderBoard(game);
   }
+  // Presentation-only derivation: uses the already-resolved turn, consumes zero RNG,
+  // and never mutates game, replay actions, or localStorage.
+  function beforeVisual(s){
+    return {hero:{...s.hero},hp:s.hp,coins:s.coins,shards:s.meta.shards,
+      floor:s.floor,level:s.level,status:s.status,
+      enemies:s.enemies.map(e=>({id:e.id,x:e.x,y:e.y,hp:e.hp,boss:e.boss,eliteType:e.eliteType})),
+      loot:s.loot.map(l=>({...l}))};
+  }
+  function visualEvents(before,after,cmd){
+    const fx=[],add=(kind,x,y,text)=>fx.push({kind,x,y,text});
+    if(after.floor>before.floor){
+      add('jackpot',after.hero.x,after.hero.y,'✦ 第 '+before.floor+' 層突破');
+      return fx;
+    }
+    const hero=after.hero;
+    if(cmd.startsWith('relic:')){
+      const id=cmd.slice(6),r=RELICS[id];
+      if(r)add(r.rarity==='legendary'?'jackpot':'level',hero.x,hero.y,r.rarity==='legendary'?'★ 傳說聖物！':'◆ 聖物強化！');
+    }
+    if(after.level>before.level)add('level',hero.x,hero.y,'LEVEL '+after.level+' ↑');
+    if(after.hp>before.hp)add('heal',hero.x,hero.y,'+'+(after.hp-before.hp)+' HP');
+    if(after.hp<before.hp)add('hurt',hero.x,hero.y,'−'+(before.hp-after.hp)+' HP');
+    if(after.coins>before.coins)add('gold',hero.x,hero.y,'+'+(after.coins-before.coins)+' G');
+    if(after.meta.shards>before.shards)add('shard',hero.x,hero.y,'+'+(after.meta.shards-before.shards)+' ◆');
+    const [dx,dy]=DIRECTIONS[cmd]||[0,0],targetX=before.hero.x+dx,targetY=before.hero.y+dy;
+    const isCrit=after.notice.includes('暴擊');
+    for(const e of before.enemies){
+      const left=after.enemies.find(curr=>curr.id===e.id),lost=e.hp-(left?left.hp:0);
+      if(lost>0){
+        const direct=(e.x===targetX&&e.y===targetY);
+        const kind=direct&&isCrit?'crit':after.notice.includes('雷鏈')&&!direct?'chain':'damage';
+        add(kind,e.x,e.y,(kind==='crit'?'✦ ':'')+'−'+lost);
+      }
+      if(!left)add('kill',e.x,e.y,e.boss?'★ 守衛擊破':e.eliteType?'★ 精英討伐':'✦ 擊殺');
+    }
+    // Cache prize is selected deterministically when the elite dies, not here.
+    const opened=before.loot.find(l=>l.type==='cache'&&l.x===hero.x&&l.y===hero.y);
+    if(opened&&!after.loot.some(l=>l.type==='cache'&&l.x===hero.x&&l.y===hero.y)){
+      add('jackpot',hero.x,hero.y,opened.prize==='relic'?'★ 遠古聖物匣':opened.prize==='soul'?'◆ 魂晶寶箱':'★ 黃金寶箱');
+    }
+    return fx.slice(0,16);
+  }
+  const reducedMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)');
+  function emitEffects(effects){
+    if(!effects.length||reducedMotion?.matches)return;
+    const layer=$('fxLayer'),board=canvas.getBoundingClientRect(),arena=$('arena').getBoundingClientRect();
+    const sx=board.width/WIDTH,sy=board.height/HEIGHT;
+    if(!sx||!sy)return;
+    const tileStacks=new Map();
+    effects.forEach((event,i)=>{
+      const tileKey=event.x+':'+event.y,stack=tileStacks.get(tileKey)||0;tileStacks.set(tileKey,stack+1);
+      const x=board.left-arena.left+(event.x+.5)*sx,
+        y=board.top-arena.top+(event.y+.5)*sy;
+      const rare=event.kind==='jackpot'||event.kind==='crit'||event.kind==='kill';
+      if(rare){
+        const ring=document.createElement('span');ring.className='fx-flash'+(event.kind==='jackpot'?' rare':'');
+        ring.style.left=x+'px';ring.style.top=y+'px';ring.addEventListener('animationend',()=>ring.remove(),{once:true});layer.appendChild(ring);
+      }
+      const el=document.createElement('span');el.className='fx-float '+event.kind;
+      el.textContent=event.text;el.style.left=x+'px';el.style.top=(y+(event.kind==='gold'?16:-8)-stack*23)+'px';
+      el.style.setProperty('--dx',((i%3)-1)*11+'px');
+      el.addEventListener('animationend',()=>el.remove(),{once:true});layer.appendChild(el);
+    });
+    // Rapid play must not accumulate unbounded nodes on low-end phones.
+    while(layer.childElementCount>40)layer.firstElementChild.remove();
+    const pulse=effects.some(e=>e.kind==='crit')?'impact-crit':effects.some(e=>e.kind==='level'||e.kind==='jackpot')?'impact-level':'';
+    if(pulse){const a=$('arena');a.classList.remove('impact-crit','impact-level');void a.offsetWidth;a.classList.add(pulse);}
+  }
+  function useAction(cmd){
+    const before=beforeVisual(game),changed=applyAction(game,cmd);
+    if(changed)store();
+    render();
+    if(changed)emitEffects(visualEvents(before,game,cmd));
+    return changed;
+  }
   function openModal(opts){
     overlayMode=opts.mode||'notice';writeText($('modalEyebrow'),opts.eyebrow||'MIDNIGHT DUNGEON');
     writeText($('modalIcon'),opts.icon||'✦');writeText($('modalTitle'),opts.title);writeText($('modalText'),opts.text||'');
@@ -542,9 +657,9 @@
         el.append(title,descr,combo);
       }
       el.addEventListener('click',button.action);actions.appendChild(el);
-    }$('overlay').classList.add('open');
+    }$('overlay').classList.toggle('jackpot',opts.mode==='relic-choice'&&game.relicSource==='elite');$('overlay').classList.add('open');
   }
-  function closeModal(){$('overlay').classList.remove('open');overlayMode='';}
+  function closeModal(){$('overlay').classList.remove('open','jackpot');overlayMode='';}
   function makeReport(){
     return JSON.stringify({game:'Midnight Dungeon',version:VERSION,seed:game.seed,floor:game.floor,turn:game.turn,status:game.status,
       level:game.level,xp:game.xp,hp:game.hp,maxHp:game.maxHp,attack:attack(game),coins:game.coins,kills:game.kills,
@@ -557,7 +672,7 @@
     {label:'複製紀錄',action:async()=>{const txt=makeReport();try{await navigator.clipboard.writeText(txt);writeText($('modalText'),'已複製測試紀錄。');}catch(_){$('debugText').focus();$('debugText').select();writeText($('modalText'),'請長按下面的紀錄並選擇「拷貝」。');}}},
     {label:'關閉',secondary:true,action:()=>{closeModal();endIfNeeded();}}
   ]});}
-  function performFromModal(cmd,next){closeModal();const changed=applyAction(game,cmd);if(changed)store();render();if(next)next();else endIfNeeded();}
+  function performFromModal(cmd,next){closeModal();useAction(cmd);if(next)next();else endIfNeeded();}
   function openBlessing(){
     const milestone=(game.floor-1)%5===0;
     openModal({mode:'reward',icon:milestone?'★':'✦',eyebrow:'FLOOR CLEARED',
@@ -623,8 +738,8 @@
     else if(game.status==='relic')openRelicChoice();
     else if(game.status==='lost'||game.status==='retired')openCamp();
   }
-  function action(a){if(overlayMode)return;const changed=applyAction(game,a);if(changed)store();render();endIfNeeded();}
-  function restart(seed){game=createState(seed,game.meta);store();closeModal();render();}
+  function action(a){if(overlayMode)return;useAction(a);endIfNeeded();}
+  function restart(seed){$('fxLayer').replaceChildren();game=createState(seed,game.meta);store();closeModal();render();}
   for(const el of document.querySelectorAll('[data-dir]'))el.addEventListener('click',()=>action(el.dataset.dir));
   $('waitBtn').addEventListener('click',()=>action('wait'));
   $('potionBtn').addEventListener('click',()=>action('potion'));
@@ -654,7 +769,7 @@
   canvas.addEventListener('pointercancel',()=>{touch=null;});
   // A deterministic, scriptable API used for regression tests, not an online service.
   window.MidnightDungeonTest={createState,applyAction,distances,validateSave,migrateV3,migrateV2,migrateLegacy,attack,xpRequired,
-    offerBlessings,offerRelics,relicRewardFloor,relicCritChance,defeatEnemy,strike,enemyTurn,makeFloor,collect,ELITES,CACHE_PRIZES,talentCost,settleGold,VERSION,WIDTH,HEIGHT};
+    offerBlessings,offerRelics,relicRewardFloor,relicCritChance,defeatEnemy,strike,enemyTurn,makeFloor,collect,ELITES,CACHE_PRIZES,talentCost,settleGold,beforeVisual,visualEvents,migrateV4,VERSION,WIDTH,HEIGHT};
   game=restore()||createState((Date.now()>>>0)||1);store();render();endIfNeeded();
 })();
 </script>
