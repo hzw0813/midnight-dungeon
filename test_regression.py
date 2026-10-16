@@ -1,4 +1,4 @@
-"""Core Midnight Dungeon v0.2 engine and mobile smoke tests."""
+"""Core Midnight Dungeon v0.3 engine and mobile smoke tests."""
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 import json
@@ -9,9 +9,9 @@ with sync_playwright() as pw:
     errors=[]
     page.on("pageerror",lambda e:errors.append(str(e)))
     page.set_content(index.read_text(encoding="utf-8"))
-    assert page.title()=="深夜地牢 | Midnight Dungeon v0.2"
+    assert page.title()=="深夜地牢 | Midnight Dungeon v0.3"
     result=page.evaluate("""() => {
-      const api=window.MidnightDungeonTest, out={seeds:2000,unreachable:0,invalid:0,replay:0,boss:0,flows:0};
+      const api=window.MidnightDungeonTest, out={seeds:2000,unreachable:0,invalid:0,replay:0,boss:0,flows:0,relicOffers:0};
       for(let seed=1;seed<=2000;seed++){
         const a=api.createState(seed),b=api.createState(seed),d=api.distances(a,1,1);
         if(d[a.exit.y][a.exit.x]<0||[...a.enemies,...a.loot].some(x=>d[x.y][x.x]<0))out.unreachable++;
@@ -30,6 +30,13 @@ with sync_playwright() as pw:
         s.enemies=[];if(!api.applyAction(s,q[0])||s.status!=="choosing")throw Error("floor "+f);
         if(s.pendingBlessings.length!==3)throw Error("blessings "+f);
         if(!api.applyAction(s,"blessing:"+s.pendingBlessings[0]))throw Error("choice "+f);
+        if(api.relicRewardFloor(f)){
+          if(s.status!=="relic"||s.pendingRelics.length!==3)throw Error("relic offer "+f);
+          const chosen=s.pendingRelics[0];
+          if(!api.applyAction(s,"relic:"+chosen)||s.relics[chosen]<1)throw Error("relic claim "+f);
+          out.relicOffers++;
+        }else if(s.status!=="playing")throw Error("unexpected reward "+f);
+        if(!api.validateSave(s))throw Error("invalid save "+f);
         out.flows++;
       }
       const lost=api.createState(101);lost.coins=30;lost.hp=1;
@@ -43,11 +50,11 @@ with sync_playwright() as pw:
       return out;
     }""")
     assert result["unreachable"]==result["invalid"]==result["replay"]==0,result
-    assert result["boss"]==2 and result["flows"]==12,result
+    assert result["boss"]==2 and result["flows"]==12 and result["relicOffers"]==4,result
     page.locator('[data-dir="right"]').click()
     assert page.locator("#turnBadge").inner_text()=="TURN 1"
     page.locator("#debugBtn").click()
-    assert json.loads(page.locator("#debugText").input_value())["version"]=="0.2.0"
+    assert json.loads(page.locator("#debugText").input_value())["version"]=="0.3.0"
     assert not errors,errors
     print(json.dumps(result,ensure_ascii=False))
     browser.close()
