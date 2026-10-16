@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b1220">
   <meta name="color-scheme" content="dark">
-  <title>深夜地牢 | Midnight Dungeon v0.5.1</title>
+  <title>深夜地牢 | Midnight Dungeon v0.5.2</title>
   <style>
     :root {--bg:#090f1b; --panel:#141f31; --panel2:#1a2940; --border:#293951;--text:#edf5ff;--muted:#9cacc5;--accent:#8fe9c2;--amber:#f5c77b;--red:#ff8d94}
     *{box-sizing:border-box} html{background:var(--bg)} body{margin:0;min-height:100dvh;color:var(--text);font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at 50% -20%,#253959 0%,transparent 47%),var(--bg);overscroll-behavior-y:contain}
@@ -96,6 +96,20 @@
       background:linear-gradient(110deg,transparent 44%,#fff5c737 49%,transparent 54%);animation:raritySweep 1.5s ease-out 1 both}
     @keyframes raritySweep{from{transform:translateX(-65%)}to{transform:translateX(65%)}}
     @keyframes rewardEnter{from{opacity:.2;transform:translateY(15px) scale(.965)}to{opacity:1;transform:translateY(0) scale(1)}}
+    /* v0.5.2: text lives in a dedicated status rail, never on top of creatures or HP bars. */
+    .combat-feed{min-height:37px;display:flex;align-items:center;justify-content:center;gap:6px;margin:6px 0 0;padding:5px 8px;border:1px solid #35516a;border-radius:11px;background:#152739;overflow:hidden;pointer-events:none}
+    .combat-feed:empty::before{content:'戰鬥提示將顯示在這裡，不遮住地圖';color:#8299b0;font-size:10px;letter-spacing:.02em}
+    .combat-feed .fx-float{position:static;flex:0 1 auto;min-width:0;max-width:100%;padding:5px 8px;border:1px solid #45627a;border-radius:7px;background:#23374c;font-size:12px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:1;transform:none!important;letter-spacing:0;-webkit-text-stroke:0;text-shadow:none;will-change:auto;animation:combatChipFade 1.48s ease both}
+    .combat-feed .fx-float.crit,.combat-feed .fx-float.jackpot{color:#ffe49b;background:#4a3b25;border-color:#c4974c;font-size:13px}
+    .combat-feed .fx-float.damage{color:#effcff}.combat-feed .fx-float.chain{color:#b7e8ff}.combat-feed .fx-float.kill{color:#fcedb9;font-size:12px}
+    .combat-feed .fx-float.heal,.combat-feed .fx-float.level{color:#abffd5;font-size:12px}
+    .combat-feed .fx-float.hurt{color:#ffa9b4}.combat-feed .fx-float.shard{color:#dec3ff}.combat-feed .fx-float.gold{color:#ffe096;font-size:12px}
+    .combat-feed .fx-float.fx-static{animation:none!important;opacity:1!important;transform:none!important}
+    @keyframes combatChipFade{0%{opacity:0}12%,84%{opacity:1}100%{opacity:0}}
+    /* Hollow impact rings signal where a hit landed without covering the sprite in the middle. */
+    .fx-flash{background:radial-gradient(circle,transparent 0 40%,#ffd86e94 48%,transparent 58%)}
+    .fx-flash.rare{background:radial-gradient(circle,transparent 0 40%,#c4acff91 49%,transparent 60%)}
+    .fx-flash.hit{background:radial-gradient(circle,transparent 0 38%,#9df7da9e 47%,transparent 58%)}
     @media (prefers-reduced-motion:reduce){.fx-float,.fx-flash,.arena.impact-hit,.arena.impact-crit,.arena.impact-level,.arena.impact-hit::after,.arena.impact-crit::after,.shade.open .modal,.modal .relic-pick[data-rarity="legendary"]::after{animation:none!important}}
     @media (prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;animation:none!important}}
   </style>
@@ -103,7 +117,7 @@
 <body>
 <main>
   <header>
-    <div class="brand"><div class="brand-icon" aria-hidden="true">✦</div><div><h1>深夜地牢</h1><p class="subtitle">IMPACT EDITION · V0.5.1</p></div></div>
+    <div class="brand"><div class="brand-icon" aria-hidden="true">✦</div><div><h1>深夜地牢</h1><p class="subtitle">CLEAR COMBAT · V0.5.2</p></div></div>
     <div class="top-actions"><button class="mini" id="debugBtn" type="button">紀錄</button><button class="mini" id="campBtn" type="button">營地</button><button class="mini" id="restartBtn" type="button">重開</button></div>
   </header>
   <section class="stats" aria-label="遊戲狀態">
@@ -118,6 +132,7 @@
   <button id="relicBtn" type="button" class="relic-strip" aria-label="查看聖物背包"><span class="relic-tag">◆ 聖物</span><span id="relicSummary">尚無聖物 · 第 1 層突破後獲得</span><span aria-hidden="true" class="relic-arrow">›</span></button>
   <div id="eliteAlert" class="elite-alert" aria-live="polite" hidden></div>
   <div class="arena" id="arena"><canvas id="board" width="440" height="520" aria-label="地牢遊戲畫面：可滑動移動角色"></canvas><div id="fxLayer" class="fx-layer" aria-hidden="true"></div><div class="board-note" id="turnBadge">TURN 0</div></div>
+  <div id="combatFeed" class="combat-feed" aria-label="地圖下方戰鬥傷害與獎勵提示" aria-live="off"></div>
   <div class="notice" aria-live="polite"><i></i><span id="notice">無盡地牢：打怪升級，突破每一層取得魂晶。</span></div>
   <section class="controls" aria-label="觸控遊戲操作">
     <div class="dpad">
@@ -140,7 +155,7 @@
 <script>
 (function(){
   'use strict';
-  const VERSION='0.5.1', WIDTH=11, HEIGHT=13, SAVE_KEY='midnight-dungeon-v0.5.1', V5_SAVE_KEY='midnight-dungeon-v0.5', V4_SAVE_KEY='midnight-dungeon-v0.4', V3_SAVE_KEY='midnight-dungeon-v0.3', V2_SAVE_KEY='midnight-dungeon-v0.2', OLD_SAVE_KEY='midnight-dungeon-v0.1';
+  const VERSION='0.5.2', WIDTH=11, HEIGHT=13, SAVE_KEY='midnight-dungeon-v0.5.2', V51_SAVE_KEY='midnight-dungeon-v0.5.1', V5_SAVE_KEY='midnight-dungeon-v0.5', V4_SAVE_KEY='midnight-dungeon-v0.4', V3_SAVE_KEY='midnight-dungeon-v0.3', V2_SAVE_KEY='midnight-dungeon-v0.2', OLD_SAVE_KEY='midnight-dungeon-v0.1';
   const DIRECTIONS={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
   const BLESSINGS={
     blade:{name:'狂戰之刃',description:'本輪攻擊 +1',icon:'⚔'},
@@ -466,6 +481,11 @@
       s.hero&&goodInt(s.hero.x)&&goodInt(s.hero.y)&&Array.isArray(s.map)&&s.map.length===HEIGHT&&s.map.every(row=>Array.isArray(row)&&row.length===WIDTH&&row.every(c=>c===0||c===1))&&isWalkable(s,s.hero.x,s.hero.y)&&s.exit&&goodInt(s.exit.x)&&goodInt(s.exit.y)&&isWalkable(s,s.exit.x,s.exit.y)&&Array.isArray(s.enemies)&&s.enemies.every(e=>isWalkable(s,e.x,e.y)&&goodInt(e.hp,1)&&goodInt(e.maxHp,1)&&goodInt(e.damage,1)&&typeof e.boss==='boolean'&&(!e.eliteType||Object.hasOwn(ELITES,e.eliteType))&&(!e.eliteType||typeof e.windup==='boolean')&&(!e.eliteType||goodInt(e.armor))&&(!e.eliteType||!e.boss))&&
       Array.isArray(s.loot)&&s.loot.every(l=>isWalkable(s,l.x,l.y)&&['coin','potion','cache'].includes(l.type)&&(l.type!=='cache'||Object.hasOwn(CACHE_PRIZES,l.prize)))&&Array.isArray(s.actions)&&Array.isArray(s.events)&&Array.isArray(s.pendingBlessings)&&s.pendingBlessings.every(k=>Object.hasOwn(BLESSINGS,k))&&['playing','choosing','relic','lost','retired'].includes(s.status));
   }
+  function migrateV51(old){
+    if(!old||old.version!=='0.5.1')return null;
+    const s={...old,version:VERSION};
+    return validateSave(s)?s:null;
+  }
   function migrateV5(old){
     if(!old||old.version!=='0.5.0')return null;
     const s={...old,version:VERSION};
@@ -508,6 +528,8 @@
   function restore(){try{
     const raw=localStorage.getItem(SAVE_KEY);
     if(raw){const data=JSON.parse(raw);if(validateSave(data))return data;}
+    const v51=localStorage.getItem(V51_SAVE_KEY);
+    if(v51){const data=migrateV51(JSON.parse(v51));if(data)return data;}
     const v5=localStorage.getItem(V5_SAVE_KEY);
     if(v5){const data=migrateV5(JSON.parse(v5));if(data)return data;}
     const v4=localStorage.getItem(V4_SAVE_KEY);
@@ -629,30 +651,35 @@
   function emitEffects(effects){
     if(!effects.length)return;
     const reduce=!!reducedMotion?.matches;
-    const layer=$('fxLayer'),board=canvas.getBoundingClientRect(),arena=$('arena').getBoundingClientRect();
+    const layer=$('fxLayer'),feed=$('combatFeed');
+    const board=canvas.getBoundingClientRect(),arena=$('arena').getBoundingClientRect();
     const sx=board.width/WIDTH,sy=board.height/HEIGHT;
     if(!sx||!sy)return;
-    const tileStacks=new Map();
-    effects.forEach((event,i)=>{
-      const tileKey=event.x+':'+event.y,stack=tileStacks.get(tileKey)||0;tileStacks.set(tileKey,stack+1);
-      const x=board.left-arena.left+(event.x+.5)*sx,
-        y=board.top-arena.top+(event.y+.5)*sy;
+    // Battlefield layer: non-text hollow rings only. Never write damage text on tiles.
+    effects.forEach(event=>{
       const rare=event.kind==='jackpot'||event.kind==='crit'||event.kind==='kill';
       const ordinaryHit=event.kind==='damage'||event.kind==='chain';
       if(!reduce&&(rare||ordinaryHit)){
+        const x=board.left-arena.left+(event.x+.5)*sx;
+        const y=board.top-arena.top+(event.y+.5)*sy;
         const ring=document.createElement('span');
         ring.className='fx-flash'+(event.kind==='jackpot'?' rare':ordinaryHit?' hit':'');
         ring.style.left=x+'px';ring.style.top=y+'px';
         ring.addEventListener('animationend',()=>ring.remove(),{once:true});
         layer.appendChild(ring);setTimeout(()=>ring.remove(),1100);
       }
-      const el=document.createElement('span');el.className='fx-float '+event.kind+(reduce?' fx-static':'');
-      el.textContent=event.text;el.style.left=x+'px';el.style.top=(y+(event.kind==='gold'?16:-8)-stack*23)+'px';
-      el.style.setProperty('--dx',((i%3)-1)*11+'px');
-      el.addEventListener('animationend',()=>el.remove(),{once:true});layer.appendChild(el);
-      // In iOS reduced-motion mode animationend never fires; always clear with a timer.
-      setTimeout(()=>el.remove(),reduce?1500:1600);
     });
+    // Text lives OUTSIDE the arena, so not even a stacked critical+kill can hide actors.
+    const maxChips=window.innerWidth<360?2:3;
+    for(const event of effects.slice(-maxChips)){
+      const el=document.createElement('span');
+      el.className='fx-float '+event.kind+(reduce?' fx-static':'');
+      el.textContent=event.text;
+      feed.appendChild(el);
+      el.addEventListener('animationend',()=>el.remove(),{once:true});
+      setTimeout(()=>el.remove(),reduce?1500:1650);
+    }
+    while(feed.childElementCount>maxChips)feed.firstElementChild.remove();
     while(layer.childElementCount>40)layer.firstElementChild.remove();
     const pulse=reduce?'':effects.some(e=>e.kind==='crit')?'impact-crit':
       effects.some(e=>e.kind==='damage'||e.kind==='chain')?'impact-hit':
@@ -766,7 +793,7 @@
     else if(game.status==='lost'||game.status==='retired')openCamp();
   }
   function action(a){if(overlayMode)return;useAction(a);endIfNeeded();}
-  function restart(seed){$('fxLayer').replaceChildren();game=createState(seed,game.meta);store();closeModal();render();}
+  function restart(seed){$('fxLayer').replaceChildren();$('combatFeed').replaceChildren();game=createState(seed,game.meta);store();closeModal();render();}
   for(const el of document.querySelectorAll('[data-dir]'))el.addEventListener('click',()=>action(el.dataset.dir));
   $('waitBtn').addEventListener('click',()=>action('wait'));
   $('potionBtn').addEventListener('click',()=>action('potion'));
@@ -778,8 +805,8 @@
   $('fxTestBtn').addEventListener('click',()=>{
     const pos={x:Math.min(WIDTH-2,game.hero.x+1),y:game.hero.y};
     $('fxTestStatus').textContent=reducedMotion?.matches?
-      '系統開啟減少動態效果：展示靜態傷害數字':
-      '展示中：普通命中（綠光）→ 暴擊（金光）';
+      '減少動態效果：下方顯示靜態數字，不遮擋地圖':
+      '綠光→金光；傷害數字顯示於地圖下方';
     emitEffects([{kind:'damage',...pos,text:'−8'}]);
     setTimeout(()=>emitEffects([{kind:'crit',...pos,text:'✦ −16'}]),680);
   });
@@ -804,7 +831,7 @@
   canvas.addEventListener('pointercancel',()=>{touch=null;});
   // A deterministic, scriptable API used for regression tests, not an online service.
   window.MidnightDungeonTest={createState,applyAction,distances,validateSave,migrateV3,migrateV2,migrateLegacy,attack,xpRequired,
-    offerBlessings,offerRelics,relicRewardFloor,relicCritChance,defeatEnemy,strike,enemyTurn,makeFloor,collect,ELITES,CACHE_PRIZES,talentCost,settleGold,beforeVisual,visualEvents,migrateV5,migrateV4,VERSION,WIDTH,HEIGHT};
+    offerBlessings,offerRelics,relicRewardFloor,relicCritChance,defeatEnemy,strike,enemyTurn,makeFloor,collect,ELITES,CACHE_PRIZES,talentCost,settleGold,beforeVisual,visualEvents,migrateV51,migrateV5,migrateV4,VERSION,WIDTH,HEIGHT};
   game=restore()||createState((Date.now()>>>0)||1);store();render();endIfNeeded();
 })();
 </script>
