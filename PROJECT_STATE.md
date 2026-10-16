@@ -1,29 +1,31 @@
 # Midnight Dungeon — PROJECT_STATE
 
-## 最新版本與位置
-- **v0.5.0 / Impact Edition**（2026-10-16），已完成 Chromium 本地回歸；尚需使用者實體 iPhone Safari 驗收。
-- Repository: https://github.com/hzw0813/midnight-dungeon
+## 最新版
+- **v0.5.1 / Impact Visibility Fix**，2026-10-16，Chromium 自動測試通過；iPhone Safari 真機待驗收。
+- Repo: https://github.com/hzw0813/midnight-dungeon
 - Game: https://hzw0813.github.io/midnight-dungeon/
-- Single-file source: `main/index.html`。每次使用 ChatGPT 普通聊天室小步迭代，不用 Codex 或 Work。提交前須測試，使用 Git commit 可回退。
+- 主程式 `index.html` 單檔 HTML5，純 ChatGPT 一般聊天室小步迭代，完成後以 Git 提交並確認 Pages。
+- **此版觸發原因：** 使用者在 iPhone 回報「攻擊完全沒看到整個螢幕有閃特效」。實際 v0.5 並沒有全螢幕閃光；普通攻擊只顯示小浮字，暴擊才稍微亮。Reduce Motion 時原程式則直接跳過全部特效。
 
-## 當前玩法（v0.1～v0.4）
-- 無盡地牢、seed + actions 決定性重播、XP / 升級 / 金幣 / 鍛造 / 藥水。
-- 每層祝福三選一；第 1、4、7、10… 層聖物三選一。六個聖物：echo、greed、blood、storm、thorns、ember。每五層 Boss 封印出口。
-- 偶數且非 Boss 樓層有精英 brute / guard / hunter。精英必掉寶箱，類型 gold 52% / soul 30% / relic 18%。
-- 退回營地或死亡後能把魂晶用於永久 talents（might、life、wealth）。
+## v0.5.1 變更
+- 所有正常造成敵方傷害的攻擊可觸發 `impact-hit`；地圖周圍短暫綠光、亮邊與命中光圈。暴擊則以更顯眼的金色亮光與傷害字區分。無刺眼的全螢幕白閃。
+- `fxTestBtn` 會依序展示普通命中／暴擊效果，用於 iPhone 驗收，不呼叫 `applyAction`，不消耗 RNG/回合/存檔。
+- `prefers-reduced-motion` 模式不再直接丟棄傷害提示，而是短暫顯示靜態浮字，定時清除。一般動畫也有 timer fallback。
+- 版本 `VERSION='0.5.1'`、新 key `midnight-dungeon-v0.5.1`；優先 `migrateV5` 遷移 v0.5.0，不更改遊戲狀態其餘欄位；保留 v0.4/v0.3/v0.2/v0.1 遷移及舊 key。
 
-## v0.5 新增（純視覺）
-- 新增 `#fxLayer` DOM 動效層，`pointer-events:none`、`aria-hidden=true`，不影響 Canvas 點擊或滑動。
-- `beforeVisual(s)`、`visualEvents(before,after,cmd)` 只讀遊戲狀態，不消耗 RNG、不存入本機資料，`useAction()` 在每輪 UI 操作後產生暫時顯示。
-- 傷害、暴擊、擊殺、精英、Boss、金幣、魂晶、回血、受傷、升級、開箱、聖物與過層回饋；短暫閃光、modal 進場動畫及傳說聖物掃光。
-- 動效會自動移除、最多 40 DOM 節點；尊重 `prefers-reduced-motion`。未變動戰鬥引擎數值。
-- 存檔使用 `midnight-dungeon-v0.5`，優先從 v0.4 遷移，然後支援 v0.3、v0.2、v0.1；保留所有舊 key。
+## 既有遊戲與保護約束
+- 無盡爬塔、戰鬥/XP/升級/金幣/鍛造/祝福、六聖物流派、每五層 Boss、偶數非 Boss 樓層精英及稀有寶箱、魂晶永久天賦，全部沿用。
+- 程式保持 seed+actions 確定性重播；本版只動視覺與存檔版本遷移，不改戰鬥或掉寶機率。
+- 版本驅動：先測試→原子更新 GitHub→檢查 Pages→手機驗收。先修 BUG，再擴充下一個系統。
 
-## QA 與限制
-- 本地 Chromium：2,000 seeds、1,114 引擎斷言、30 層、360 精英掉落案例、13 項純動效斷言、手機 DOM／動畫清理／舊存檔升級；320、375、390、430 寬度無水平 overflow；JS page errors 0。
-- 真實 iPhone Safari、長期儲存政策、極深層數值上限與實際動效流暢度尚未驗收。網站 Pages 部署狀態須以 GitHub Actions 為準。
+## 測試與限制
+- Playwright Chromium：原有 1,114 引擎斷言、2000 seeds、30 層、360 組精英掉落、13 項動效純函式斷言；320/375/390/430 手機版面均通過。
+- v0.5.1 專項：試播效果、實際普通命中、減少動態效果靜態字、特效清理、試播不寫入存檔、v0.5.0 保存進度遷移通過。
+- 真實 iPhone Safari 顯示、網站端儲存、長期性能尚未完成驗收。不要聲稱真機已測試。
 
-## 下一輪
-1. 先收集 Safari 操作／動畫流暢度／存檔回饋；若出現 Bug 先修。
-2. v0.6 建議做「存檔匯入匯出」或「成就圖鑑與長期目標」，一次只做一個主要系統。
-3. 續作請先讀取此 repo 的最新 main 與 PROJECT_STATE，保留 deterministic replay、舊版存檔及手機操作，完成回歸測試後再部署。
+## 下一步
+1. 讓使用者 iPhone 開啟正式網站，確認是 V0.5.1，點「試播打擊特效」，收集綠光／金光／減少動態效果的體感。
+2. 若仍沒有亮光，詢問是否只看見靜態字（Reduce Motion）、有沒有看到 V0.5.1，必要時請截圖。
+3. 後續才開始 v0.6 存檔匯出／匯入功能。
+
+下一次聊天：先讀 GitHub 最新 main 的 index.html、PROJECT_STATE.md 和測試紀錄，以本次 v0.5.1 真機回饋為第一優先。

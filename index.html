@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b1220">
   <meta name="color-scheme" content="dark">
-  <title>深夜地牢 | Midnight Dungeon v0.5</title>
+  <title>深夜地牢 | Midnight Dungeon v0.5.1</title>
   <style>
     :root {--bg:#090f1b; --panel:#141f31; --panel2:#1a2940; --border:#293951;--text:#edf5ff;--muted:#9cacc5;--accent:#8fe9c2;--amber:#f5c77b;--red:#ff8d94}
     *{box-sizing:border-box} html{background:var(--bg)} body{margin:0;min-height:100dvh;color:var(--text);font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at 50% -20%,#253959 0%,transparent 47%),var(--bg);overscroll-behavior-y:contain}
@@ -56,7 +56,14 @@
     @media(max-width:390px){h1{font-size:17px}.stat-value{font-size:16px}.progress-top{font-size:10px;gap:5px}.top-actions .mini{padding:7px 8px}.brand-icon{width:36px;height:36px}}
     @media (max-height:750px){header{margin-bottom:7px}.stats{margin-bottom:7px}.stat{min-height:54px;padding:6px 10px}.arena{padding:7px}canvas{width:min(100%,calc(41dvh * 11 / 13),440px)}.notice{min-height:37px;margin:7px 0;padding:6px 10px}.control{min-height:42px}.action{min-height:55px}.hint{margin-top:10px}}
     /* V0.5 feedback layer: effects never intercept the swipe/pointer input on canvas. */
-    .fx-layer{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden;border-radius:16px}
+    .fx-layer{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden;border-radius:16px}
+    .fx-test-row{display:flex;gap:9px;align-items:center;justify-content:center;flex-wrap:wrap;margin:9px 0 0}
+    .fx-test{min-height:36px;padding:6px 12px;border-radius:10px;border:1px solid #7fbcae;background:#21493e;color:#ddfff3;font-size:12px;font-weight:800}
+    #fxTestStatus{color:#c0d5e9;font-size:11px;line-height:1.5}
+    .arena::after{content:'';position:absolute;inset:0;border-radius:16px;opacity:0;pointer-events:none;z-index:2}
+    .arena.impact-hit::after{background:radial-gradient(ellipse at center,#a3f7e474 0%,#7ee8eb3d 75%,#7ee8eb30 100%);box-shadow:inset 0 0 0 5px #99fceab3,inset 0 0 64px #9af1e877;animation:fxMapPulse .38s ease-out both}
+    .arena.impact-crit::after{background:radial-gradient(ellipse at center,#ffe89d91 0%,#ffc66a66 60%,#ffc66a3a 100%);box-shadow:inset 0 0 0 6px #ffe29cd4,inset 0 0 75px #ffd17b99;animation:fxMapPulse .48s ease-out both}
+    @keyframes fxMapPulse{0%{opacity:0}16%{opacity:1}48%{opacity:.55}100%{opacity:0}}
     .fx-float{position:absolute;display:inline-block;min-width:18px;text-align:center;white-space:nowrap;pointer-events:none;
       font-variant-numeric:tabular-nums;font-weight:950;font-size:15px;line-height:1.1;letter-spacing:.015em;
       color:#fff5e0;-webkit-text-stroke:.45px #1b2633;text-shadow:0 2px 0 #132033,0 0 11px #07131d,0 0 7px #09172a;
@@ -70,6 +77,9 @@
       background:radial-gradient(circle,#fff9d29c 0%,#ffd86e70 22%,#ffcd6d22 50%,transparent 72%);transform:translate(-50%,-50%);
       animation:fxFlash .52s ease-out both}
     .fx-flash.rare{width:116px;height:116px;background:radial-gradient(circle,#d9a9ff98 0%,#ad88ff62 32%,transparent 72%)}
+    .fx-flash.hit{width:104px;height:104px;background:radial-gradient(circle,#d8fff9b3 0%,#9df7da70 34%,transparent 76%)}
+    .arena.impact-hit{animation:arenaImpact .3s ease-out}
+    .fx-float.fx-static{animation:none!important;opacity:1!important;transform:translate(-50%,-50%)!important;background:#101e32ed;padding:5px 7px;border:1px solid #6c8baa;border-radius:7px}
     @keyframes fxRise{0%{transform:translate(calc(-50% + var(--dx,0px)),0) scale(.66);opacity:0}
       14%{transform:translate(calc(-50% + var(--dx,0px)),-8px) scale(1.15);opacity:1}
       78%{transform:translate(calc(-50% + var(--dx,0px)),-25px) scale(1);opacity:1}
@@ -86,14 +96,14 @@
       background:linear-gradient(110deg,transparent 44%,#fff5c737 49%,transparent 54%);animation:raritySweep 1.5s ease-out 1 both}
     @keyframes raritySweep{from{transform:translateX(-65%)}to{transform:translateX(65%)}}
     @keyframes rewardEnter{from{opacity:.2;transform:translateY(15px) scale(.965)}to{opacity:1;transform:translateY(0) scale(1)}}
-    @media (prefers-reduced-motion:reduce){.fx-float,.fx-flash,.arena.impact-crit,.arena.impact-level,.shade.open .modal,.modal .relic-pick[data-rarity="legendary"]::after{animation:none!important}}
+    @media (prefers-reduced-motion:reduce){.fx-float,.fx-flash,.arena.impact-hit,.arena.impact-crit,.arena.impact-level,.arena.impact-hit::after,.arena.impact-crit::after,.shade.open .modal,.modal .relic-pick[data-rarity="legendary"]::after{animation:none!important}}
     @media (prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;animation:none!important}}
   </style>
 </head>
 <body>
 <main>
   <header>
-    <div class="brand"><div class="brand-icon" aria-hidden="true">✦</div><div><h1>深夜地牢</h1><p class="subtitle">IMPACT EDITION · V0.5</p></div></div>
+    <div class="brand"><div class="brand-icon" aria-hidden="true">✦</div><div><h1>深夜地牢</h1><p class="subtitle">IMPACT EDITION · V0.5.1</p></div></div>
     <div class="top-actions"><button class="mini" id="debugBtn" type="button">紀錄</button><button class="mini" id="campBtn" type="button">營地</button><button class="mini" id="restartBtn" type="button">重開</button></div>
   </header>
   <section class="stats" aria-label="遊戲狀態">
@@ -123,13 +133,14 @@
       <button type="button" class="action secondary" id="waitBtn"><span aria-hidden="true">◷</span> 等待一回合</button>
     </div>
   </section>
-  <div class="hint">擊殺升級・精英寶箱與稀有聖物・暴擊與成長特效・每 5 層守衛</div>
+  <div class="fx-test-row"><button id="fxTestBtn" type="button" class="fx-test">試播打擊特效</button><span id="fxTestStatus" role="status" aria-live="polite">普通命中也應看得到地圖光效</span></div>
+  <div class="hint">擊殺升級・精英寶箱與稀有聖物・每 5 層守衛</div>
 </main>
 <div class="shade" id="overlay" role="presentation"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="eyebrow" id="modalEyebrow">MIDNIGHT DUNGEON</div><div class="big" id="modalIcon">✦</div><h2 id="modalTitle">提示</h2><p id="modalText"></p><textarea id="debugText" readonly hidden spellcheck="false"></textarea><div class="modal-actions" id="modalActions"></div></section></div>
 <script>
 (function(){
   'use strict';
-  const VERSION='0.5.0', WIDTH=11, HEIGHT=13, SAVE_KEY='midnight-dungeon-v0.5', V4_SAVE_KEY='midnight-dungeon-v0.4', V3_SAVE_KEY='midnight-dungeon-v0.3', V2_SAVE_KEY='midnight-dungeon-v0.2', OLD_SAVE_KEY='midnight-dungeon-v0.1';
+  const VERSION='0.5.1', WIDTH=11, HEIGHT=13, SAVE_KEY='midnight-dungeon-v0.5.1', V5_SAVE_KEY='midnight-dungeon-v0.5', V4_SAVE_KEY='midnight-dungeon-v0.4', V3_SAVE_KEY='midnight-dungeon-v0.3', V2_SAVE_KEY='midnight-dungeon-v0.2', OLD_SAVE_KEY='midnight-dungeon-v0.1';
   const DIRECTIONS={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
   const BLESSINGS={
     blade:{name:'狂戰之刃',description:'本輪攻擊 +1',icon:'⚔'},
@@ -455,6 +466,11 @@
       s.hero&&goodInt(s.hero.x)&&goodInt(s.hero.y)&&Array.isArray(s.map)&&s.map.length===HEIGHT&&s.map.every(row=>Array.isArray(row)&&row.length===WIDTH&&row.every(c=>c===0||c===1))&&isWalkable(s,s.hero.x,s.hero.y)&&s.exit&&goodInt(s.exit.x)&&goodInt(s.exit.y)&&isWalkable(s,s.exit.x,s.exit.y)&&Array.isArray(s.enemies)&&s.enemies.every(e=>isWalkable(s,e.x,e.y)&&goodInt(e.hp,1)&&goodInt(e.maxHp,1)&&goodInt(e.damage,1)&&typeof e.boss==='boolean'&&(!e.eliteType||Object.hasOwn(ELITES,e.eliteType))&&(!e.eliteType||typeof e.windup==='boolean')&&(!e.eliteType||goodInt(e.armor))&&(!e.eliteType||!e.boss))&&
       Array.isArray(s.loot)&&s.loot.every(l=>isWalkable(s,l.x,l.y)&&['coin','potion','cache'].includes(l.type)&&(l.type!=='cache'||Object.hasOwn(CACHE_PRIZES,l.prize)))&&Array.isArray(s.actions)&&Array.isArray(s.events)&&Array.isArray(s.pendingBlessings)&&s.pendingBlessings.every(k=>Object.hasOwn(BLESSINGS,k))&&['playing','choosing','relic','lost','retired'].includes(s.status));
   }
+  function migrateV5(old){
+    if(!old||old.version!=='0.5.0')return null;
+    const s={...old,version:VERSION};
+    return validateSave(s)?s:null;
+  }
   function migrateV4(old){
     if(!old||old.version!=='0.4.0')return null;
     // No rules or map shape changed: copy the current run and every permanent talent.
@@ -492,6 +508,8 @@
   function restore(){try{
     const raw=localStorage.getItem(SAVE_KEY);
     if(raw){const data=JSON.parse(raw);if(validateSave(data))return data;}
+    const v5=localStorage.getItem(V5_SAVE_KEY);
+    if(v5){const data=migrateV5(JSON.parse(v5));if(data)return data;}
     const v4=localStorage.getItem(V4_SAVE_KEY);
     if(v4){const data=migrateV4(JSON.parse(v4));if(data)return data;}
     const v3=localStorage.getItem(V3_SAVE_KEY);
@@ -609,7 +627,8 @@
   }
   const reducedMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)');
   function emitEffects(effects){
-    if(!effects.length||reducedMotion?.matches)return;
+    if(!effects.length)return;
+    const reduce=!!reducedMotion?.matches;
     const layer=$('fxLayer'),board=canvas.getBoundingClientRect(),arena=$('arena').getBoundingClientRect();
     const sx=board.width/WIDTH,sy=board.height/HEIGHT;
     if(!sx||!sy)return;
@@ -619,19 +638,27 @@
       const x=board.left-arena.left+(event.x+.5)*sx,
         y=board.top-arena.top+(event.y+.5)*sy;
       const rare=event.kind==='jackpot'||event.kind==='crit'||event.kind==='kill';
-      if(rare){
-        const ring=document.createElement('span');ring.className='fx-flash'+(event.kind==='jackpot'?' rare':'');
-        ring.style.left=x+'px';ring.style.top=y+'px';ring.addEventListener('animationend',()=>ring.remove(),{once:true});layer.appendChild(ring);
+      const ordinaryHit=event.kind==='damage'||event.kind==='chain';
+      if(!reduce&&(rare||ordinaryHit)){
+        const ring=document.createElement('span');
+        ring.className='fx-flash'+(event.kind==='jackpot'?' rare':ordinaryHit?' hit':'');
+        ring.style.left=x+'px';ring.style.top=y+'px';
+        ring.addEventListener('animationend',()=>ring.remove(),{once:true});
+        layer.appendChild(ring);setTimeout(()=>ring.remove(),1100);
       }
-      const el=document.createElement('span');el.className='fx-float '+event.kind;
+      const el=document.createElement('span');el.className='fx-float '+event.kind+(reduce?' fx-static':'');
       el.textContent=event.text;el.style.left=x+'px';el.style.top=(y+(event.kind==='gold'?16:-8)-stack*23)+'px';
       el.style.setProperty('--dx',((i%3)-1)*11+'px');
       el.addEventListener('animationend',()=>el.remove(),{once:true});layer.appendChild(el);
+      // In iOS reduced-motion mode animationend never fires; always clear with a timer.
+      setTimeout(()=>el.remove(),reduce?1500:1600);
     });
-    // Rapid play must not accumulate unbounded nodes on low-end phones.
     while(layer.childElementCount>40)layer.firstElementChild.remove();
-    const pulse=effects.some(e=>e.kind==='crit')?'impact-crit':effects.some(e=>e.kind==='level'||e.kind==='jackpot')?'impact-level':'';
-    if(pulse){const a=$('arena');a.classList.remove('impact-crit','impact-level');void a.offsetWidth;a.classList.add(pulse);}
+    const pulse=reduce?'':effects.some(e=>e.kind==='crit')?'impact-crit':
+      effects.some(e=>e.kind==='damage'||e.kind==='chain')?'impact-hit':
+      effects.some(e=>e.kind==='level'||e.kind==='jackpot')?'impact-level':'';
+    const a=$('arena');a.classList.remove('impact-hit','impact-crit','impact-level');
+    if(pulse){void a.offsetWidth;a.classList.add(pulse);}
   }
   function useAction(cmd){
     const before=beforeVisual(game),changed=applyAction(game,cmd);
@@ -748,6 +775,14 @@
   $('campBtn').addEventListener('click',openCamp);
   $('debugBtn').addEventListener('click',openDebug);
   $('restartBtn').addEventListener('click',askRestart);
+  $('fxTestBtn').addEventListener('click',()=>{
+    const pos={x:Math.min(WIDTH-2,game.hero.x+1),y:game.hero.y};
+    $('fxTestStatus').textContent=reducedMotion?.matches?
+      '系統開啟減少動態效果：展示靜態傷害數字':
+      '展示中：普通命中（綠光）→ 暴擊（金光）';
+    emitEffects([{kind:'damage',...pos,text:'−8'}]);
+    setTimeout(()=>emitEffects([{kind:'crit',...pos,text:'✦ −16'}]),680);
+  });
   $('overlay').addEventListener('click',e=>{if(e.target===$('overlay')&&['shop','debug','camp-peek','confirm','relic-bag'].includes(overlayMode)){closeModal();endIfNeeded();}});
   document.addEventListener('keydown',e=>{
     if(e.key==='Escape'&&overlayMode&&['shop','debug','camp-peek','confirm','relic-bag'].includes(overlayMode)){closeModal();endIfNeeded();return;}
@@ -769,7 +804,7 @@
   canvas.addEventListener('pointercancel',()=>{touch=null;});
   // A deterministic, scriptable API used for regression tests, not an online service.
   window.MidnightDungeonTest={createState,applyAction,distances,validateSave,migrateV3,migrateV2,migrateLegacy,attack,xpRequired,
-    offerBlessings,offerRelics,relicRewardFloor,relicCritChance,defeatEnemy,strike,enemyTurn,makeFloor,collect,ELITES,CACHE_PRIZES,talentCost,settleGold,beforeVisual,visualEvents,migrateV4,VERSION,WIDTH,HEIGHT};
+    offerBlessings,offerRelics,relicRewardFloor,relicCritChance,defeatEnemy,strike,enemyTurn,makeFloor,collect,ELITES,CACHE_PRIZES,talentCost,settleGold,beforeVisual,visualEvents,migrateV5,migrateV4,VERSION,WIDTH,HEIGHT};
   game=restore()||createState((Date.now()>>>0)||1);store();render();endIfNeeded();
 })();
 </script>
